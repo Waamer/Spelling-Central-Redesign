@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Select a Game</title>
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body class="game-page">
+
+<div class="container">
+
+    <h1 class="title">Choose a Game</h1>
+    <p id="selectedListInfo" class="selected-list-info">
+        Selected list: -
+    </p>
+
+    <div class="game-grid">
+
+        <a href="#" class="game-card">
+            <h2>Mini Game 1</h2>
+        </a>
+
+        <a href="#" class="game-card">
+            <h2>Mini Game 2</h2>
+        </a>
+
+        <a href="#" class="game-card">
+            <h2>Mini Game 3</h2>
+        </a>
+
+        <a href="#" class="game-card">
+            <h2>Mini Game 4</h2>
+        </a>
+
+    </div>
+
+    <a href="javascript:history.back()" class="back-link">
+        ← Back
+    </a>
+
+</div>
+
+<script src="word-lists.js"></script>
+<script>
+    const infoEl = document.getElementById("selectedListInfo");
+    const params = new URLSearchParams(window.location.search);
+    const mode = params.get("mode");
+    const dataSource = window.wordLibraryData || { baseLibraries: [] };
+
+    function chooseRandomBaseList() {
+        const pool = dataSource.baseLibraries || [];
+        if (!pool.length) return null;
+        const index = Math.floor(Math.random() * pool.length);
+        return pool[index];
+    }
+
+    let selectedList = null;
+    let sourceLabel = "Quick Play";
+
+    if (mode === "custom") {
+        sourceLabel = "Custom Game";
+        try {
+            selectedList = JSON.parse(localStorage.getItem("spellingcentral_selected_list") || "null");
+        } catch (error) {
+            selectedList = null;
+        }
+        if (!selectedList) {
+            selectedList = chooseRandomBaseList();
+            sourceLabel = "Custom Game (fallback)";
+        }
+    } else {
+        selectedList = chooseRandomBaseList();
+        sourceLabel = "Quick Play";
+    }
+
+    if (selectedList) {
+        infoEl.textContent = `Selected list: ${selectedList.title} (${selectedList.words.length} words) - ${sourceLabel}`;
+    } else {
+        infoEl.textContent = `Selected list: unavailable - ${sourceLabel}`;
+    }
+</script>
+
+</body>
+</html>
