@@ -13,7 +13,17 @@
 
   <div class="custom-shell">
     <section class="custom-left">
-      <input id="customSearch" class="library-search" type="text" placeholder="Search word lists..." aria-label="Search word lists">
+      <div class="library-search-row">
+        <input id="customSearch" class="library-search" type="text" placeholder="Search word lists..." aria-label="Search word lists">
+        <select id="customFilter" class="library-filter" aria-label="Filter word lists">
+          <option value="all">All</option>
+          <option value="easy">Easy</option>
+          <option value="medium">Medium</option>
+          <option value="hard">Hard</option>
+          <option value="custom">Custom</option>
+          <option value="premade">Premade</option>
+        </select>
+      </div>
       <div id="customList" class="custom-list" role="listbox" aria-label="Custom game word lists"></div>
     </section>
 
@@ -57,7 +67,9 @@
         .map((item) => ({
           id: item.id,
           title: item.title,
-          words: item.words.map((word) => String(word).trim()).filter(Boolean)
+          words: item.words.map((word) => String(word).trim()).filter(Boolean),
+          category: item.category || "custom",
+          difficulty: item.difficulty || "custom"
         }));
     } catch (error) {
       return [];
@@ -70,6 +82,7 @@
   ];
   const customListEl = document.getElementById("customList");
   const customSearch = document.getElementById("customSearch");
+  const customFilter = document.getElementById("customFilter");
   const customListTitle = document.getElementById("customListTitle");
   const customWordCount = document.getElementById("customWordCount");
   const customPreviewWrap = document.getElementById("customPreviewWrap");
@@ -78,16 +91,44 @@
   const toGameSelectionBtn = document.getElementById("toGameSelectionBtn");
   let selectedId = null;
 
+  function getDisplayTitle(lib) {
+    if (!lib || !lib.title) return "";
+    if (["easy", "medium", "hard"].includes((lib.difficulty || "").toLowerCase())) {
+      return lib.title.replace(/\s*-\s*(easy|medium|hard)\s*$/i, "");
+    }
+    return lib.title;
+  }
+
   function renderList() {
     const query = customSearch.value.trim().toLowerCase();
-    const visible = libraries.filter((lib) => lib.title.toLowerCase().includes(query));
+    const filterValue = customFilter.value;
+    const visible = libraries.filter((lib) => {
+      const matchesQuery = lib.title.toLowerCase().includes(query);
+      if (!matchesQuery) return false;
+      const difficulty = (lib.difficulty || "custom").toLowerCase();
+      if (filterValue === "all") return true;
+      if (filterValue === "custom") return difficulty === "custom";
+      if (filterValue === "premade") return difficulty !== "custom";
+      return difficulty === filterValue;
+    });
     customListEl.innerHTML = "";
 
     visible.forEach((lib) => {
       const button = document.createElement("button");
       button.type = "button";
       button.className = "custom-list-item";
-      button.textContent = lib.title;
+
+      const label = document.createElement("span");
+      label.className = "custom-item-label";
+      label.textContent = getDisplayTitle(lib);
+      button.appendChild(label);
+
+      const difficulty = (lib.difficulty || "custom").toLowerCase();
+      const difficultyTag = document.createElement("span");
+      difficultyTag.className = `difficulty-tag difficulty-${difficulty}`;
+      difficultyTag.textContent = difficulty;
+      button.appendChild(difficultyTag);
+
       if (lib.id === selectedId) button.classList.add("selected");
       button.addEventListener("click", () => setSelected(lib.id));
       customListEl.appendChild(button);
@@ -125,6 +166,7 @@
   }
 
   customSearch.addEventListener("input", renderList);
+  customFilter.addEventListener("change", renderList);
   toGameSelectionBtn.addEventListener("click", () => {
     const selected = libraries.find((lib) => lib.id === selectedId);
     if (!selected) return;

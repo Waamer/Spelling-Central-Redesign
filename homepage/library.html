@@ -16,7 +16,17 @@
 
     <!-- LEFT: list panel -->
     <div class="library-left">
-      <input class="library-search" type="text" placeholder="Search libraries..." aria-label="Search libraries">
+      <div class="library-search-row">
+        <input class="library-search" type="text" placeholder="Search libraries..." aria-label="Search libraries">
+        <select id="libraryFilter" class="library-filter" aria-label="Filter libraries">
+          <option value="all">All</option>
+          <option value="easy">Easy</option>
+          <option value="medium">Medium</option>
+          <option value="hard">Hard</option>
+          <option value="custom">Custom</option>
+          <option value="premade">Premade</option>
+        </select>
+      </div>
 
       <div class="library-list" role="listbox" aria-label="Library list" id="libraryList"></div>
     </div>
@@ -102,20 +112,36 @@
 
 <div id="addModal" class="import-modal hidden" role="dialog" aria-modal="true" aria-labelledby="addTitle">
   <div class="import-panel add-panel">
-    <h3 id="addTitle" class="import-title">Add Word List</h3>
-    <p class="import-subtitle">Enter up to 25 words for your new list.</p>
+    <div class="panel-header">
+      <h3 id="addTitle" class="import-title">Add Word List</h3>
+      <button id="closeAddBtn" class="tool-btn add-close-btn" type="button" aria-label="Close add list dialog">X</button>
+    </div>
 
     <label class="import-label" for="addListName">List name</label>
     <input id="addListName" class="library-search import-name-input" type="text" />
     <p id="addNameError" class="import-error hidden"></p>
 
     <div id="addWordsGrid" class="add-words-grid" aria-label="25 word slots"></div>
-    <p id="addWordsError" class="import-error hidden"></p>
-
-    <div class="import-actions">
-      <button id="cancelAddBtn" class="tool-btn" type="button">Cancel</button>
-      <button id="nextPageBtn" class="tool-btn tool-disabled" type="button" disabled>Next Page</button>
+    <p id="addPageIndicator" class="panel-muted add-page-indicator">1/1</p>
+    <div class="import-actions add-actions">
+      <div class="add-nav-buttons">
+        <button id="prevPageBtn" class="tool-btn tool-disabled" type="button" disabled>&larr;</button>
+        <button id="nextPageBtn" class="tool-btn tool-disabled" type="button" disabled>&rarr;</button>
+      </div>
       <button id="confirmAddBtn" class="tool-btn tool-disabled" type="button" disabled>Add List</button>
+    </div>
+  </div>
+</div>
+
+<div id="fullListModal" class="import-modal hidden" role="dialog" aria-modal="true" aria-labelledby="fullListTitle">
+  <div class="import-panel full-list-panel">
+    <div class="panel-header">
+      <h3 id="fullListTitle" class="import-title">Full Word List</h3>
+      <button id="closeFullListBtn" class="tool-btn" type="button">Close</button>
+    </div>
+    <p id="fullListCount" class="panel-muted" style="margin: 6px 0 10px;">Word count: 0</p>
+    <div class="word-preview full-list-preview" aria-label="All words in selected list">
+      <ul id="fullListWords" class="word-preview-inner"></ul>
     </div>
   </div>
 </div>
@@ -149,14 +175,25 @@
     const addModal = document.getElementById("addModal");
     const addListName = document.getElementById("addListName");
     const addNameError = document.getElementById("addNameError");
-    const addWordsError = document.getElementById("addWordsError");
     const addWordsGrid = document.getElementById("addWordsGrid");
-    const cancelAddBtn = document.getElementById("cancelAddBtn");
+    const addPageIndicator = document.getElementById("addPageIndicator");
+    const closeAddBtn = document.getElementById("closeAddBtn");
+    const prevPageBtn = document.getElementById("prevPageBtn");
     const nextPageBtn = document.getElementById("nextPageBtn");
     const confirmAddBtn = document.getElementById("confirmAddBtn");
+    const fullListModal = document.getElementById("fullListModal");
+    const fullListTitle = document.getElementById("fullListTitle");
+    const fullListCount = document.getElementById("fullListCount");
+    const fullListWords = document.getElementById("fullListWords");
+    const closeFullListBtn = document.getElementById("closeFullListBtn");
+    const libraryFilter = document.getElementById("libraryFilter");
     let pendingImportWords = [];
     let pendingImportHasDuplicates = false;
+    const WORDS_PER_PAGE = 25;
     const addWordFields = [];
+    let addDuplicateSetCache = new Set();
+    let addPages = [];
+    let addCurrentPageIndex = 0;
 
     function readStoredCustomLists() {
       try {
@@ -176,6 +213,8 @@
             title: item.title,
             words: item.words.map((word) => String(word).trim()).filter(Boolean),
             favorite: !!item.favorite,
+            category: item.category || "custom",
+            difficulty: item.difficulty || "custom",
             locked: false
           }));
       } catch (error) {
@@ -190,7 +229,9 @@
           id: item.id,
           title: item.title,
           words: item.words,
-          favorite: !!item.favorite
+          favorite: !!item.favorite,
+          category: item.category || "custom",
+          difficulty: item.difficulty || "custom"
         }));
       try {
         sessionStorage.setItem(CUSTOM_LISTS_STORAGE_KEY, JSON.stringify(customLists));
@@ -221,11 +262,28 @@
     function getFilteredLibraries() {
       const search = document.querySelector(".library-search");
       const q = search.value.trim().toLowerCase();
-      const filtered = libraries.filter((lib) => lib.title.toLowerCase().includes(q));
+      const filterValue = libraryFilter.value;
+      const filtered = libraries.filter((lib) => {
+        const matchesQuery = lib.title.toLowerCase().includes(q);
+        if (!matchesQuery) return false;
+        const difficulty = (lib.difficulty || "custom").toLowerCase();
+        if (filterValue === "all") return true;
+        if (filterValue === "custom") return difficulty === "custom";
+        if (filterValue === "premade") return difficulty !== "custom";
+        return difficulty === filterValue;
+      });
       return filtered.sort((a, b) => {
         if (!!b.favorite !== !!a.favorite) return b.favorite ? 1 : -1;
         return a.title.localeCompare(b.title);
       });
+    }
+
+    function getDisplayTitle(lib) {
+      if (!lib || !lib.title) return "";
+      if (["easy", "medium", "hard"].includes((lib.difficulty || "").toLowerCase())) {
+        return lib.title.replace(/\s*-\s*(easy|medium|hard)\s*$/i, "");
+      }
+      return lib.title;
     }
 
     function renderLibraryList() {
@@ -241,14 +299,24 @@
         itemBtn.type = "button";
         itemBtn.dataset.id = lib.id;
         itemBtn.dataset.title = lib.title;
+        const labelWrap = document.createElement("span");
+        labelWrap.className = "library-item-label-wrap";
         const label = document.createElement("span");
         label.className = "library-item-label";
-        label.textContent = lib.title;
-        itemBtn.appendChild(label);
+        label.textContent = getDisplayTitle(lib);
+        labelWrap.appendChild(label);
+        itemBtn.appendChild(labelWrap);
+
+        const difficultyTag = document.createElement("span");
+        const difficulty = (lib.difficulty || "custom").toLowerCase();
+        difficultyTag.className = `difficulty-tag difficulty-${difficulty}`;
+        difficultyTag.textContent = difficulty;
+        itemBtn.appendChild(difficultyTag);
+
         if (selectedId === lib.id) itemBtn.classList.add("selected");
 
         itemBtn.addEventListener("click", () => setSelected(lib.id));
-        itemBtn.addEventListener("dblclick", () => alert(`Open full list: ${lib.title} (prototype)`));
+        itemBtn.addEventListener("dblclick", () => openFullListModal(lib));
         itemBtn.addEventListener("mouseenter", () => {
           if (label.classList.contains("is-overflowing")) {
             label.classList.add("is-scrolling");
@@ -303,7 +371,7 @@
         libraryListEl.appendChild(row);
 
         requestAnimationFrame(() => {
-          const overflowAmount = label.scrollWidth - label.clientWidth;
+          const overflowAmount = label.scrollWidth - labelWrap.clientWidth;
           const isOverflowing = overflowAmount > 6;
           label.classList.toggle("is-overflowing", isOverflowing);
           if (isOverflowing) {
@@ -312,6 +380,24 @@
           }
         });
       });
+    }
+
+    function openFullListModal(list) {
+      if (!list) return;
+      fullListTitle.textContent = list.title;
+      fullListCount.textContent = `Word count: ${list.words.length}`;
+      fullListWords.innerHTML = "";
+      list.words.forEach((word) => {
+        const li = document.createElement("li");
+        li.textContent = word;
+        fullListWords.appendChild(li);
+      });
+      fullListModal.classList.remove("hidden");
+    }
+
+    function closeFullListModal() {
+      fullListModal.classList.add("hidden");
+      fullListWords.innerHTML = "";
     }
 
     function sanitizeWordsFromText(text) {
@@ -379,19 +465,17 @@
       addNameError.classList.remove("hidden");
     }
 
-    function setAddWordsError(message) {
-      if (!message) {
-        addWordsError.textContent = "";
-        addWordsError.classList.add("hidden");
-        return;
-      }
-      addWordsError.textContent = message;
-      addWordsError.classList.remove("hidden");
+    function createEmptyAddPage() {
+      return Array.from({ length: WORDS_PER_PAGE }, () => ({ value: "", touched: false }));
+    }
+
+    function updateAddPageIndicator() {
+      addPageIndicator.textContent = `${addCurrentPageIndex + 1}/${addPages.length}`;
     }
 
     function ensureAddWordFields() {
       if (addWordFields.length) return;
-      for (let i = 0; i < 25; i += 1) {
+      for (let i = 0; i < WORDS_PER_PAGE; i += 1) {
         const slot = document.createElement("div");
         slot.className = "add-word-slot";
 
@@ -400,6 +484,7 @@
         input.className = "add-word-input";
         input.placeholder = `Word ${i + 1}`;
         input.setAttribute("aria-label", `Word ${i + 1}`);
+        input.dataset.slotIndex = String(i);
 
         const repeatedTag = document.createElement("span");
         repeatedTag.className = "repeated-tag hidden";
@@ -407,12 +492,23 @@
 
         const invalidTag = document.createElement("span");
         invalidTag.className = "invalid-tag hidden";
-        invalidTag.textContent = "warning: invalid word";
+        invalidTag.textContent = "invalid word!";
 
-        input.addEventListener("input", updateAddButtonsState);
+        input.addEventListener("input", () => {
+          const slotIndex = Number(input.dataset.slotIndex);
+          if (addPages[addCurrentPageIndex] && addPages[addCurrentPageIndex][slotIndex]) {
+            addPages[addCurrentPageIndex][slotIndex].value = input.value;
+          }
+          updateAddButtonsState(false);
+        });
         input.addEventListener("blur", () => {
+          const slotIndex = Number(input.dataset.slotIndex);
+          if (addPages[addCurrentPageIndex] && addPages[addCurrentPageIndex][slotIndex]) {
+            addPages[addCurrentPageIndex][slotIndex].value = input.value;
+            addPages[addCurrentPageIndex][slotIndex].touched = true;
+          }
           input.dataset.touched = "true";
-          updateAddButtonsState();
+          updateAddButtonsState(true);
         });
 
         slot.appendChild(input);
@@ -421,6 +517,25 @@
         addWordsGrid.appendChild(slot);
         addWordFields.push({ input, repeatedTag, invalidTag });
       }
+    }
+
+    function loadAddPage(pageIndex) {
+      addCurrentPageIndex = pageIndex;
+      if (!addPages[addCurrentPageIndex]) {
+        addPages[addCurrentPageIndex] = createEmptyAddPage();
+      }
+      const page = addPages[addCurrentPageIndex];
+      addWordFields.forEach(({ input, repeatedTag, invalidTag }, idx) => {
+        const entry = page[idx] || { value: "", touched: false };
+        input.value = entry.value;
+        if (entry.touched) input.dataset.touched = "true";
+        else delete input.dataset.touched;
+        input.classList.remove("is-repeated");
+        input.classList.remove("is-invalid");
+        repeatedTag.classList.add("hidden");
+        invalidTag.classList.add("hidden");
+      });
+      updateAddPageIndicator();
     }
 
     function closeImportModal() {
@@ -456,14 +571,12 @@
       addModal.classList.add("hidden");
       addListName.value = "";
       setAddNameError("");
-      setAddWordsError("");
-      addWordFields.forEach(({ input, repeatedTag, invalidTag }) => {
-        input.value = "";
-        delete input.dataset.touched;
-        input.classList.remove("is-repeated");
-        repeatedTag.classList.add("hidden");
-        invalidTag.classList.add("hidden");
-      });
+      addPages = [createEmptyAddPage()];
+      addCurrentPageIndex = 0;
+      loadAddPage(0);
+      addDuplicateSetCache = new Set();
+      prevPageBtn.disabled = true;
+      prevPageBtn.classList.add("tool-disabled");
       nextPageBtn.disabled = true;
       nextPageBtn.classList.add("tool-disabled");
       confirmAddBtn.disabled = true;
@@ -475,50 +588,56 @@
       addModal.classList.remove("hidden");
       addListName.value = getNextCustomListName();
       setAddNameError("");
-      setAddWordsError("");
-      addWordFields.forEach(({ input, repeatedTag, invalidTag }) => {
-        input.value = "";
-        delete input.dataset.touched;
-        input.classList.remove("is-repeated");
-        repeatedTag.classList.add("hidden");
-        invalidTag.classList.add("hidden");
-      });
-      updateAddButtonsState();
+      addPages = [createEmptyAddPage()];
+      addCurrentPageIndex = 0;
+      loadAddPage(0);
+      addDuplicateSetCache = new Set();
+      updateAddButtonsState(false);
     }
 
     function isInvalidWord(word) {
-      const value = word.trim();
+      const value = String(word);
       if (!value) return false;
-      if (/^\d+$/.test(value)) return true;
-      if (/^[a-zA-Z]$/.test(value)) return true;
-      if (/[^a-zA-Z0-9]/.test(value)) return true;
-      return false;
+      // Only English letters are valid; spaces and any other characters are invalid.
+      return !/^[A-Za-z]+$/.test(value);
     }
 
-    function updateAddButtonsState() {
-      const values = addWordFields.map(({ input }) => input.value.trim());
-      const nonEmpty = values.filter(Boolean);
-      const duplicateSet = getDuplicateSet(nonEmpty);
+    function updateAddButtonsState(checkRepeatNow = false) {
+      const allValues = addPages.flatMap((page) => page.map((entry) => entry.value.trim()));
+      const nonEmpty = allValues.filter(Boolean);
+      if (checkRepeatNow) {
+        addDuplicateSetCache = getDuplicateSet(nonEmpty);
+      }
+      const duplicateSet = addDuplicateSetCache;
+      const hasTouchedInvalidAcrossPages = addPages.some((page) =>
+        page.some((entry) => entry.touched && isInvalidWord(entry.value))
+      );
 
-      addWordFields.forEach(({ input, repeatedTag, invalidTag }) => {
-        const key = input.value.trim().toLowerCase();
-        const isRepeated = key && duplicateSet.has(key);
-        const isTouched = input.dataset.touched === "true";
-        const shouldShowInvalid = isTouched && !isRepeated && isInvalidWord(input.value);
+      addWordFields.forEach(({ input, repeatedTag, invalidTag }, idx) => {
+        const pageEntry = addPages[addCurrentPageIndex]?.[idx] || { value: "", touched: false };
+        const key = pageEntry.value.trim().toLowerCase();
+        const isFocused = document.activeElement === input;
+        const isTouched = !!pageEntry.touched;
+        const isRepeated = !isFocused && isTouched && key && duplicateSet.has(key);
+        const shouldShowInvalid = isTouched && !isRepeated && isInvalidWord(pageEntry.value);
         input.classList.toggle("is-repeated", !!isRepeated);
+        input.classList.toggle("is-invalid", !!shouldShowInvalid);
         repeatedTag.classList.toggle("hidden", !isRepeated);
         invalidTag.classList.toggle("hidden", !shouldShowInvalid);
       });
 
-      if (duplicateSet.size > 0) {
-        setAddWordsError("Repeated words are not allowed.");
-      } else {
-        setAddWordsError("");
-      }
+      const currentValues = (addPages[addCurrentPageIndex] || []).map((entry) => entry.value.trim());
+      const currentPageFullyValid = currentValues.length === WORDS_PER_PAGE &&
+        currentValues.every((value) => value.length > 0 && !isInvalidWord(value));
+      const hasNextExisting = addCurrentPageIndex < addPages.length - 1;
+      const canCreateNextPage = !hasNextExisting && currentPageFullyValid && duplicateSet.size === 0;
+      const canGoNext = hasNextExisting || canCreateNextPage;
+      const canGoPrev = addCurrentPageIndex > 0;
 
-      const filled25 = values.every((value) => value.length > 0);
-      nextPageBtn.disabled = !filled25;
-      nextPageBtn.classList.toggle("tool-disabled", !filled25);
+      prevPageBtn.disabled = !canGoPrev;
+      prevPageBtn.classList.toggle("tool-disabled", !canGoPrev);
+      nextPageBtn.disabled = !canGoNext;
+      nextPageBtn.classList.toggle("tool-disabled", !canGoNext);
 
       const name = addListName.value.trim();
       if (!name) {
@@ -529,7 +648,7 @@
         setAddNameError("");
       }
 
-      const canAdd = nonEmpty.length > 0 && duplicateSet.size === 0 && name && !isDuplicateName(name);
+      const canAdd = nonEmpty.length > 0 && duplicateSet.size === 0 && !hasTouchedInvalidAcrossPages && name && !isDuplicateName(name);
       confirmAddBtn.disabled = !canAdd;
       confirmAddBtn.classList.toggle("tool-disabled", !canAdd);
     }
@@ -663,25 +782,35 @@
     // Search filter
     const search = document.querySelector(".library-search");
     search.addEventListener("input", renderLibraryList);
+    libraryFilter.addEventListener("change", renderLibraryList);
   
     // Main actions
     addBtn.addEventListener("click", openAddModal);
     importBtn.addEventListener("click", openImportModal);
     cancelImportBtn.addEventListener("click", closeImportModal);
-    cancelAddBtn.addEventListener("click", closeAddModal);
+    closeAddBtn.addEventListener("click", closeAddModal);
+    closeFullListBtn.addEventListener("click", closeFullListModal);
+    fullListModal.addEventListener("click", (event) => {
+      if (event.target === fullListModal) {
+        closeFullListModal();
+      }
+    });
     chooseFileBtn.addEventListener("click", (event) => {
       event.stopPropagation();
       importFileInput.click();
     });
     importFileInput.addEventListener("change", () => handleImportFile(importFileInput.files));
     importListName.addEventListener("input", updateImportButtonState);
-    addListName.addEventListener("input", updateAddButtonsState);
+    addListName.addEventListener("input", () => updateAddButtonsState(false));
     document.addEventListener("keydown", (event) => {
       if (event.key === "Escape" && !importModal.classList.contains("hidden")) {
         closeImportModal();
       }
       if (event.key === "Escape" && !addModal.classList.contains("hidden")) {
         closeAddModal();
+      }
+      if (event.key === "Escape" && !fullListModal.classList.contains("hidden")) {
+        closeFullListModal();
       }
     });
 
@@ -718,6 +847,8 @@
         title: name,
         words: [...pendingImportWords],
         favorite: false,
+        category: "custom",
+        difficulty: "custom",
         locked: false
       });
       writeStoredCustomLists();
@@ -726,17 +857,28 @@
       setSelected(id);
     });
 
+    prevPageBtn.addEventListener("click", () => {
+      if (prevPageBtn.disabled) return;
+      loadAddPage(addCurrentPageIndex - 1);
+      updateAddButtonsState(false);
+    });
+
     nextPageBtn.addEventListener("click", () => {
+      updateAddButtonsState(true);
       if (nextPageBtn.disabled) return;
-      alert("Next page (prototype)");
+      if (addCurrentPageIndex === addPages.length - 1) {
+        addPages.push(createEmptyAddPage());
+      }
+      loadAddPage(addCurrentPageIndex + 1);
+      updateAddButtonsState(false);
     });
 
     confirmAddBtn.addEventListener("click", () => {
-      updateAddButtonsState();
+      updateAddButtonsState(true);
       if (confirmAddBtn.disabled) return;
       const name = addListName.value.trim();
-      const words = addWordFields
-        .map(({ input }) => input.value.trim())
+      const words = addPages
+        .flatMap((page) => page.map((entry) => entry.value.trim()))
         .filter(Boolean);
       const id = `custom-${Date.now()}`;
       libraries.push({
@@ -744,6 +886,8 @@
         title: name,
         words,
         favorite: false,
+        category: "custom",
+        difficulty: "custom",
         locked: false
       });
       writeStoredCustomLists();

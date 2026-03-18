@@ -134,8 +134,17 @@ body {
     color: #1f3b2d;
     border-radius: 10px;
     padding: 8px 12px;
-    width: min(860px, 100%);
+    width: min(440px, 92%);
     box-sizing: border-box;
+    cursor: default;
+    user-select: none;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.selected-list-info:not(.hidden) {
+    cursor: pointer;
 }
 
 .game-page .game-grid {
@@ -298,6 +307,10 @@ body {
 .custom-list-item {
     width: 100%;
     text-align: left;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
     padding: 12px;
     margin-bottom: 8px;
     border-radius: 10px;
@@ -315,6 +328,11 @@ body {
 .custom-list-item.selected {
     border-color: #c9861f;
     background: #ffe7b4;
+}
+
+.custom-item-label {
+    flex: 1;
+    min-width: 0;
 }
 
 .custom-right {
@@ -389,13 +407,36 @@ body {
     color: #1f3b2d;
 }
 
+.library-search-row {
+    display: grid;
+    grid-template-columns: 1fr 130px;
+    gap: 10px;
+    align-items: center;
+}
+
+.library-filter {
+    width: 100%;
+    padding: 9px 8px;
+    border-radius: 10px;
+    border: 2px solid #c7b58d;
+    background: #fbf7ec;
+    color: #1f3b2d;
+    font-size: 13px;
+    outline: none;
+    box-sizing: border-box;
+}
+
+.library-filter:focus {
+    border-color: #c9861f;
+}
+
 .library-search:focus {
     border-color: #c9861f;
 }
 
 .library-list {
     margin-top: 14px;
-    height: 420px;           /* makes it scrollable */
+    height: 420px;
     overflow-y: auto;
     padding-right: 6px;
 }
@@ -420,6 +461,10 @@ body {
 .library-item {
     width: 100%;
     text-align: left;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
     padding: 14px 14px;
     border-radius: 12px;
     border: 2px solid #dacba9;
@@ -433,11 +478,52 @@ body {
     position: relative;
 }
 
+.library-item-label-wrap {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+}
+
 .library-item-label {
     display: inline-block;
-    max-width: 100%;
     white-space: nowrap;
     transform: translateX(0);
+}
+
+.difficulty-tag {
+    flex-shrink: 0;
+    display: inline-block;
+    font-size: 11px;
+    line-height: 1;
+    font-weight: 700;
+    text-transform: uppercase;
+    border-radius: 999px;
+    padding: 4px 8px;
+    border: 1px solid transparent;
+}
+
+.difficulty-easy {
+    color: #176636;
+    background: #dcf5e6;
+    border-color: #8fd4a8;
+}
+
+.difficulty-medium {
+    color: #1d4f86;
+    background: #deecfb;
+    border-color: #93b8e3;
+}
+
+.difficulty-hard {
+    color: #8b1c1c;
+    background: #fde2e2;
+    border-color: #e7a3a3;
+}
+
+.difficulty-custom {
+    color: #5a4a2d;
+    background: #f4ead6;
+    border-color: #d9c299;
 }
 
 .library-item-label.is-overflowing {
@@ -1189,10 +1275,44 @@ body {
     width: min(860px, 100%);
 }
 
+.full-list-panel {
+    width: min(760px, 100%);
+}
+
+.full-list-preview {
+    height: min(56vh, 520px);
+}
+
 .add-words-grid {
     margin-top: 10px;
     display: grid;
     grid-template-columns: repeat(5, minmax(120px, 1fr));
+    gap: 10px;
+}
+
+.add-page-indicator {
+    margin: 10px 0 0;
+    text-align: right;
+    font-weight: 700;
+}
+
+.add-panel .import-actions {
+    position: relative;
+    justify-content: flex-end;
+}
+
+.add-close-btn {
+    min-width: 38px;
+    padding-left: 0;
+    padding-right: 0;
+    font-weight: 700;
+}
+
+.add-actions .add-nav-buttons {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
     gap: 10px;
 }
 
@@ -1221,6 +1341,11 @@ body {
 .add-word-input.is-repeated {
     border-color: #d95f5f;
     background: #fff0f0;
+}
+
+.add-word-input.is-invalid {
+    border-color: #d95f5f;
+    background: #fff3ea;
 }
 
 .repeated-tag {
