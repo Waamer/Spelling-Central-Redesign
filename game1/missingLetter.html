@@ -1,18 +1,64 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Missing Letter Game</title>
-<link rel="stylesheet" href="style.css">
-</head>   
-    <body class="game-page missing-letter">
-    <div class="container">
-        <h1 class="title">Missing Letter Game</h1>
+    <meta charset="UTF-8">
+    <title>Missing Letters Game</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="game-page">
+
+
+<div class="container">
+
+    <!-- Title -->
+    <h1 class="title">Missing Letters</h1>
+
+    <!-- HOME BUTTON -->
+    
+    <a href="/homepage/game-selection.html" class="secondary-button home-button">Home Page</a>
+
+    <!-- Centered game -->
+    <div class="game-content">
         
-        <a href="/homepage/game-selection.html" class="back-link">Main Page</a>
+        <!-- Feedback message -->
+    <div id="feedback" class="feedback-message"></div>
 
+        <div class="game-card-main">
 
-        
+            <div class="score">
+                Score: <span id="score">0</span> / <span id="total">0</span>
+            </div>
 
+            <div id="word" class="word"></div>
 
+            <div id="options" class="options"></div>
+
+            <div class="game-actions">
+                <button class="secondary-button" onclick="nextWord()">Skip</button>
+                <button class="primary-button" onclick="checkAnswer()">Submit</button>
+                <button class="secondary-button" onclick="endGame()">End Game</button>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- Modal -->
+<div id="modal" class="modal">
+    <div class="modal-content">
+        <p id="finalScore"></p>
+
+        <button class="primary-button" onclick="restart()">Try Again</button>
+        <br><br>
+
+        <!-- HOME INSIDE MODAL TOO -->
+        <a href="/homepage/game-selection.html" class="secondary-button">Go Home</a>
+    </div>
+</div>
+
+<script src="script.js"></script>
+</body>
 </html>
