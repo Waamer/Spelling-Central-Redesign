@@ -10,6 +10,7 @@ const state = {
   gameFinished: false,
 };
 
+const backBtn = document.getElementById('backBtn');
 const tilesEl = document.getElementById('tiles');
 const scoreTextEl = document.getElementById('scoreText');
 const roundTextEl = document.getElementById('roundText');
@@ -184,6 +185,9 @@ function finishGame() {
   render();
 }
 
+backBtn.addEventListener('click', () => {
+  window.location.href = '../homepage/index.html';
+});
 moveLeftBtn.addEventListener('click', () => moveSelected('left'));
 moveRightBtn.addEventListener('click', () => moveSelected('right'));
 nextWordBtn.addEventListener('click', checkWord);
@@ -222,12 +226,4 @@ document.addEventListener('keydown', (event) => {
     checkWord();
   } else if (event.key === 'Escape') {
     if (helpModal.classList.contains('open')) {
-      helpModal.classList.remove('open');
-      helpModal.setAttribute('aria-hidden', 'true');
-    } else {
-      clearSelection();
-    }
-  }
-});
-
-loadWord(0);
+      help
