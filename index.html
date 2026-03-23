@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Spelling Central</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <div>
+        <h1 class="title">Spelling Central</h1>
+        <p class="subtitle">Apple-style redesign built with HTML, CSS, and JavaScript</p>
+      </div>
+      <button class="help-btn" id="helpBtn" aria-label="How to play">?</button>
+    </header>
+
+    <main class="main">
+      <section class="stats">
+        <article class="stat-card">
+          <p class="stat-label">Score</p>
+          <p class="stat-value" id="scoreText">0 / 0</p>
+        </article>
+        <article class="stat-card">
+          <p class="stat-label">Round</p>
+          <p class="stat-value" id="roundText">1 / 1</p>
+        </article>
+        <article class="stat-card">
+          <p class="stat-label">Target</p>
+          <p class="stat-value" id="targetLength">0 letters</p>
+          <div class="progress" aria-hidden="true">
+            <div class="progress-bar" id="progressBar" style="width: 0%"></div>
+          </div>
+        </article>
+      </section>
+
+      <section class="game-card">
+        <div class="prompt">
+          <h2>Arrange the letters to spell the word.</h2>
+          <p>Select a letter, then move it left or right.</p>
+        </div>
+
+        <div class="tiles" id="tiles" aria-label="Letter tiles"></div>
+
+        <div class="controls">
+          <button class="icon-btn" id="moveLeftBtn" aria-label="Move selected letter left">←</button>
+          <button class="icon-btn" id="moveRightBtn" aria-label="Move selected letter right">→</button>
+        </div>
+
+        <div class="feedback" id="feedbackArea">
+          <div class="feedback-pill feedback-idle" id="feedbackText">
+            Pick a tile to start. Press Enter to check your word.
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="primary-btn" id="nextWordBtn">Check Word</button>
+          <div class="secondary-row">
+            <button class="secondary-btn" id="clearSelectionBtn">Clear Selection</button>
+            <button class="secondary-btn" id="shuffleBtn">Reshuffle</button>
+            <button class="secondary-btn" id="finishBtn">Finish</button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <nav class="footer-nav">
+      <button class="nav-btn">Input Words</button>
+      <button class="nav-btn">Online Activities</button>
+      <button class="nav-btn">Printable Activities</button>
+    </nav>
+  </div>
+
+  <div class="help-modal" id="helpModal" aria-hidden="true">
+    <div class="help-card" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+      <h3 id="helpTitle">How to Play</h3>
+      <p>Click a tile to select it. Move the selected tile with the left and right buttons, or use your keyboard arrow keys.</p>
+      <p>When you think the letters form the correct word, press <kbd>Enter</kbd> or click <strong>Check Word</strong>.</p>
+      <p>Use <kbd>Escape</kbd> to clear the selection.</p>
+      <div class="secondary-row" style="margin-top: 16px;">
+        <button class="secondary-btn" id="closeHelpBtn">Close</button>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
