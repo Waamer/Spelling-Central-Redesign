@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Custom Game - Choose Word List</title>
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body class="custom-game-page">
+<div class="container">
+  <h1 class="title">Custom Game</h1>
+  <p class="subtitle">Step 1 of 2: Choose a word list before selecting a game.</p>
+
+  <div class="custom-shell">
+    <section class="custom-left">
+      <div class="library-search-row">
+        <input id="customSearch" class="library-search" type="text" placeholder="Search word lists..." aria-label="Search word lists">
+        <select id="customFilter" class="library-filter" aria-label="Filter word lists">
+          <option value="all">All</option>
+          <option value="easy">Easy</option>
+          <option value="medium">Medium</option>
+          <option value="hard">Hard</option>
+          <option value="custom">Custom</option>
+          <option value="premade">Premade</option>
+        </select>
+      </div>
+      <div id="customList" class="custom-list" role="listbox" aria-label="Custom game word lists"></div>
+    </section>
+
+    <section class="custom-right" aria-live="polite">
+      <h2 id="customListTitle" class="panel-title">Word List</h2>
+      <p id="customWordCount" class="panel-muted">Select a list on the left to preview.</p>
+
+      <div id="customPreviewWrap" class="word-preview" aria-label="Word preview">
+        <p id="customPreviewPlaceholder" class="custom-preview-placeholder">Preview will be displayed here.</p>
+        <ul id="customPreview" class="word-preview-inner"></ul>
+      </div>
+
+      <div class="custom-actions">
+        <a href="index.html" class="back-link back-button">← Back</a>
+        <button id="toGameSelectionBtn" class="tool-btn tool-disabled" type="button" disabled>
+          Next: Choose Game
+        </button>
+      </div>
+    </section>
+  </div>
+</div>
+
+<script src="word-lists.js"></script>
+<script>
+  const CUSTOM_LISTS_STORAGE_KEY = "spellingcentral_custom_lists";
+  const dataSource = window.wordLibraryData || { baseLibraries: [] };
+
+  function readStoredCustomLists() {
+    try {
+      const raw = sessionStorage.getItem(CUSTOM_LISTS_STORAGE_KEY);
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed)) return [];
+      return parsed
+        .filter((item) =>
+          item &&
+          typeof item.id === "string" &&
+          typeof item.title === "string" &&
+          Array.isArray(item.words)
+        )
+        .map((item) => ({
+          id: item.id,
+          title: item.title,
+          words: item.words.map((word) => String(word).trim()).filter(Boolean),
+          category: item.category || "custom",
+          difficulty: item.difficulty || "custom"
+        }));
+    } catch (error) {
+      return [];
+    }
+  }
+
+  const libraries = [
+    ...dataSource.baseLibraries.map((item) => ({ ...item })),
+    ...readStoredCustomLists()
+  ];
+  const customListEl = document.getElementById("customList");
+  const customSearch = document.getElementById("customSearch");
+  const customFilter = document.getElementById("customFilter");
+  const customListTitle = document.getElementById("customListTitle");
+  const customWordCount = document.getElementById("customWordCount");
+  const customPreviewWrap = document.getElementById("customPreviewWrap");
+  const customPreviewPlaceholder = document.getElementById("customPreviewPlaceholder");
+  const customPreview = document.getElementById("customPreview");
+  const toGameSelectionBtn = document.getElementById("toGameSelectionBtn");
+  let selectedId = null;
+
+  function getDisplayTitle(lib) {
+    if (!lib || !lib.title) return "";
+    if (["easy", "medium", "hard"].includes((lib.difficulty || "").toLowerCase())) {
+      return lib.title.replace(/\s*-\s*(easy|medium|hard)\s*$/i, "");
+    }
+    return lib.title;
+  }
+
+  function renderList() {
+    const query = customSearch.value.trim().toLowerCase();
+    const filterValue = customFilter.value;
+    const visible = libraries.filter((lib) => {
+      const matchesQuery = lib.title.toLowerCase().includes(query);
+      if (!matchesQuery) return false;
+      const difficulty = (lib.difficulty || "custom").toLowerCase();
+      if (filterValue === "all") return true;
+      if (filterValue === "custom") return difficulty === "custom";
+      if (filterValue === "premade") return difficulty !== "custom";
+      return difficulty === filterValue;
+    });
+    customListEl.innerHTML = "";
+
+    visible.forEach((lib) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "custom-list-item";
+
+      const label = document.createElement("span");
+      label.className = "custom-item-label";
+      label.textContent = getDisplayTitle(lib);
+      button.appendChild(label);
+
+      const difficulty = (lib.difficulty || "custom").toLowerCase();
+      const difficultyTag = document.createElement("span");
+      difficultyTag.className = `difficulty-tag difficulty-${difficulty}`;
+      difficultyTag.textContent = difficulty;
+      button.appendChild(difficultyTag);
+
+      if (lib.id === selectedId) button.classList.add("selected");
+      button.addEventListener("click", () => setSelected(lib.id));
+      customListEl.appendChild(button);
+    });
+  }
+
+  function setSelected(id) {
+    selectedId = id;
+    renderList();
+    const selected = libraries.find((lib) => lib.id === id);
+
+    if (!selected) {
+      customListTitle.textContent = "Word List";
+      customWordCount.textContent = "Select a list on the left to preview.";
+      customPreview.innerHTML = "";
+      customPreview.classList.add("hidden");
+      customPreviewPlaceholder.classList.remove("hidden");
+      toGameSelectionBtn.disabled = true;
+      toGameSelectionBtn.classList.add("tool-disabled");
+      return;
+    }
+
+    customListTitle.textContent = selected.title;
+    customWordCount.textContent = `Word count: ${selected.words.length}`;
+    customPreview.innerHTML = "";
+    selected.words.forEach((word) => {
+      const li = document.createElement("li");
+      li.textContent = word;
+      customPreview.appendChild(li);
+    });
+    customPreview.classList.remove("hidden");
+    customPreviewPlaceholder.classList.add("hidden");
+    toGameSelectionBtn.disabled = false;
+    toGameSelectionBtn.classList.remove("tool-disabled");
+  }
+
+  customSearch.addEventListener("input", renderList);
+  customFilter.addEventListener("change", renderList);
+  toGameSelectionBtn.addEventListener("click", () => {
+    const selected = libraries.find((lib) => lib.id === selectedId);
+    if (!selected) return;
+    localStorage.setItem("spellingcentral_selected_list", JSON.stringify(selected));
+    window.location.href = "game-selection.html?mode=custom";
+  });
+
+  renderList();
+  setSelected(null);
+</script>
+</body>
+</html>

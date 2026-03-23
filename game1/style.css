@@ -1,0 +1,287 @@
+/* =====================
+   Global Styles
+===================== */
+body.game-page {
+    --frame-inner: 14px;
+    --frame-outer: 22px;
+    margin: 0;
+    min-height: 100vh;
+    min-height: 100dvh;
+    overflow: hidden;
+    background:
+        radial-gradient(circle at 22% 18%, rgba(255,255,255,0.08), transparent 40%),
+        radial-gradient(circle at 80% 85%, rgba(255,255,255,0.05), transparent 36%),
+        #2f6b3f;
+    box-shadow:
+        inset 0 0 0 var(--frame-inner) #8a5a31,
+        inset 0 0 0 var(--frame-outer) #5f3d20;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+.secondary-button {
+    background-color: white;
+    color: #333;
+    padding: 16px 40px;
+    text-decoration: none;
+    border-radius: 10px;
+    font-size: 18px;
+    margin-top: 0px;
+    width: 150px;
+    border: 2px solid #ddd;
+}
+
+/* =====================
+   Container
+===================== */
+.container {
+    height: 100vh;
+    height: 100dvh;
+    box-sizing: border-box;
+    padding: calc(var(--frame-outer) + 14px);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    overflow: hidden;
+    max-width: 1120px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+/* =====================
+   Title
+===================== */
+.title {
+    color: #f4f4ea;
+    text-shadow: 0 2px 2px rgba(0,0,0,0.25);
+    margin: 0;
+    font-size: clamp(28px, 4vw, 40px);
+}
+
+/* =====================
+   Back Link
+===================== */
+.back-link {
+    display: inline-block;
+    margin-bottom: 20px;
+    color: #f4f4ea;
+    text-decoration: none;
+    font-weight: 700;
+    box-shadow: 0 3px 0 rgba(0,0,0,0.14);
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.back-link:hover {
+    transform: translateY(-1px);
+}
+
+.back-link:active {
+    transform: translateY(1px);
+    box-shadow: 0 1px 0 rgba(0,0,0,0.18);
+}
+
+/* =====================
+   Game Card
+===================== */
+.game-content {
+    margin-top: 150px;
+    display: flex;
+    flex-direction: column; /* stack children vertically */
+    align-items: center;    /* center horizontally */
+    gap: 10px;              /* space between feedback and game card */
+}
+.game-card-main {
+    background: #efe7d1;
+    border: 2px solid #c7b58d;
+    border-radius: 14px;
+    padding: 20px;
+    box-shadow: 0 4px 0 rgba(0,0,0,0.16);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: 100%;
+    max-width: 600px;
+}
+
+/* =====================
+   Score
+===================== */
+.score {
+    font-size: 15px;
+    font-weight: 700;
+    color: #1f3b2d;
+}
+
+/* =====================
+   Word Letters
+===================== */
+.word {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.letter-box {
+    width: 50px;
+    height: 50px;
+    border-radius: 12px;
+    border: 2px solid #d8c9a8;
+    background: #fbf7ec;
+    color: #1f3b2d;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: 700;
+    font-size: clamp(16px, 2vw, 28px);
+    cursor: default;
+}
+
+.letter-box[data-index] {
+    cursor: pointer;
+}
+
+/* =====================
+   Draggable Options
+===================== */
+.options {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.draggable {
+    width: 50px;
+    height: 50px;
+    border-radius: 12px;
+    background: linear-gradient(180deg, #fff9eb, #eadcc0);
+    border: 2px solid #c7b58d;
+    box-shadow: 0 2px 0 rgba(0,0,0,0.12);
+    color: #1f3b2d;
+    font-weight: 700;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: grab;
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.draggable:active {
+    cursor: grabbing;
+    transform: scale(1.05);
+}
+/* Feedback above the game */
+.feedback-message {
+    text-align: center;
+    font-size: 22px;
+    font-weight: bold;
+    margin-bottom: 16px; /* space between feedback and game card */
+    opacity: 0;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    pointer-events: none; /* so it doesn’t block clicks */
+}
+
+.feedback-message.incorrect {
+    color: #e74c3c;
+}
+
+.feedback-message:not(.incorrect) {
+    color: #2ecc71;
+}
+/* Modal centered on screen */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: #fff;
+    padding: 30px;
+    border-radius: 12px;
+    text-align: center;
+    max-width: 400px;
+    width: 90%;
+}
+/* =====================
+   Buttons
+===================== */
+.primary-button,
+.secondary-button {
+    padding: 10px 16px;
+    border-radius: 12px;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 3px 0 rgba(0,0,0,0.14);
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+    margin-bottom: 50px;
+}
+
+.home-button {
+    position: fixed;       /* stay in the same spot always */
+    top: 22px;             /* distance from top */
+    left: 22px;            /* distance from left */
+    z-index: 100;          /* above other elements */
+    margin-bottom: 50px;      /* reset previous margin if any */
+}
+
+.home-button:hover {
+    transform: translateY(-1px);
+}
+.home-button:active {
+    transform: translateY(1px);
+    box-shadow: 0 1px 0 rgba(0,0,0,0.18);
+}
+.primary-button {
+    background: #f2bb4f;
+    border: 2px solid #d79c1f;
+    color: #1f3b2d;
+}
+
+.secondary-button {
+    background: #fffaf0;
+    border: 2px solid #d8c9a8;
+    color: #1f3b2d;
+}
+
+.primary-button:hover,
+.secondary-button:hover {
+    transform: translateY(-1px);
+}
+
+.primary-button:active,
+.secondary-button:active {
+    transform: translateY(1px);
+    box-shadow: 0 1px 0 rgba(0,0,0,0.18);
+}
+
+/* =====================
+   Modal
+===================== */
+
+/* =====================
+   Responsive
+===================== */
+@media (max-width: 700px) {
+    .game-card-main {
+        padding: 16px;
+    }
+
+    .letter-box,
+    .draggable {
+        width: 40px;
+        height: 40px;
+        font-size: clamp(14px, 4vw, 22px);
+    }
+
+    .title {
+        font-size: clamp(22px, 6vw, 32px);
+    }
+}

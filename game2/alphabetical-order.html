@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alphabetical Order Game</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="game-page">
+
+<div class="container">
+
+    <!-- Title -->
+    <h1 class="title">Alphabetical Order</h1>
+
+    <!-- HOME BUTTON -->
+    <a href="/homepage/game-selection.html" class="secondary-button home-button">Home Page</a>
+
+    <!-- Start Screen -->
+    <div id="startScreen" class="start-screen">
+        <div class="game-card-main start-card">
+            <h2 class="start-title">Alphabetical Order Game</h2>
+            <div class="start-instructions">
+                <p>Drag the word cards to arrange them in alphabetical order (A to Z)</p>
+                <p>Auto-checks when all 4 positions are filled</p>
+                <p>Use hints if you need help!</p>
+            </div>
+            <button class="primary-button" onclick="startGame()">Start Game</button>
+        </div>
+    </div>
+
+    <!-- Game Content -->
+    <div id="gameContent" class="game-content hidden">
+        
+        <!-- Feedback message -->
+        <div id="feedback" class="feedback-message"></div>
+
+        <div class="game-card-main">
+
+            <!-- Progress and Score -->
+            <div class="game-header">
+                <div class="score">
+                    Round: <span id="currentRound">1</span> / 10
+                </div>
+                <div class="score">
+                    Score: <span id="score">0</span> / <span id="total">0</span>
+                </div>
+            </div>
+
+            <!-- Instructions -->
+            <p class="game-instruction">Arrange the words A to Z</p>
+
+            <!-- Word Cards Area -->
+            <div class="word-cards-section">
+                <p class="section-label">Word Cards:</p>
+                <div id="wordCards" class="word-cards-container"></div>
+            </div>
+
+            <!-- Drop Zones -->
+            <div class="drop-zones-section">
+                <p class="section-label">Drop zones:</p>
+                <div id="dropZones" class="drop-zones-container"></div>
+            </div>
+
+            <!-- Game Actions -->
+            <div class="game-actions">
+                <button class="secondary-button" onclick="toggleHint()">
+                    <span id="hintBtnText">Show Hint</span>
+                </button>
+                <button class="secondary-button" onclick="resetRound()">Reset</button>
+                <button class="secondary-button" onclick="endGame()">End Game</button>
+            </div>
+
+            <!-- Hint Display -->
+            <div id="hintBox" class="hint-box hidden">
+                <p>First word: <strong id="hintWord"></strong></p>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- Result Modal -->
+<div id="modal" class="modal">
+    <div class="modal-content">
+        <h2 class="modal-title">Game Complete!</h2>
+        <div id="finalScoreDisplay" class="final-score"></div>
+        <p id="finalMessage" class="final-message"></p>
+        
+        <div class="modal-stats">
+            <div class="stat-box correct">
+                <span id="correctCount">0</span>
+                <p>Correct</p>
+            </div>
+            <div class="stat-box incorrect">
+                <span id="incorrectCount">0</span>
+                <p>Incorrect</p>
+            </div>
+        </div>
+
+        <button class="primary-button" onclick="restart()">Play Again</button>
+        <br><br>
+        <a href="/homepage/game-selection.html" class="secondary-button">Go Home</a>
+    </div>
+</div>
+
+<!-- Correct Answer Modal -->
+<div id="correctModal" class="modal feedback-modal">
+    <div class="modal-content feedback-content correct-feedback">
+        <div class="feedback-icon">&#10003;</div>
+        <h3>Great Job!</h3>
+        <button class="primary-button" onclick="nextRound()">
+            <span id="nextBtnText">Next Round</span>
+        </button>
+    </div>
+</div>
+
+<!-- Wrong Answer Modal -->
+<div id="wrongModal" class="modal feedback-modal">
+    <div class="modal-content feedback-content wrong-feedback">
+        <div class="feedback-icon">&#10007;</div>
+        <h3>Not quite!</h3>
+        <p id="wrongMessage" class="wrong-message"></p>
+        <div class="wrong-actions">
+            <button class="primary-button" onclick="tryAgain()">Try Again</button>
+            <button class="secondary-button" onclick="showHintFromWrong()">Show Hint</button>
+        </div>
+    </div>
+</div>
+
+<script src="/word-lists.js"></script>
+<script src="alphabetical-order.js"></script>
+</body>
+</html>
