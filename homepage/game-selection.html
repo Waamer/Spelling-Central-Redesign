@@ -20,8 +20,8 @@
             <h2>Missing Letters</h2>
         </a>
 
-        <a href="#" class="game-card">
-            <h2>Mini Game 2</h2>
+        <a id="game2Link" href="../game2/alphabetical-order.html" class="game-card">
+            <h2>Alphabetical-Order</h2>
         </a>
 
         <a href="/WordSearch/word-search.html" class="game-card">
@@ -110,6 +110,17 @@
             closeFullListModal();
         }
     });
+</script>
+<script>
+    (function () {
+        const game2Link = document.getElementById("game2Link");
+        if (!game2Link) return;
+        const params = new URLSearchParams(window.location.search);
+        const mode = params.get("mode");
+        if (mode) {
+            game2Link.href = `../game2/alphabetical-order.html?mode=${encodeURIComponent(mode)}`;
+        }
+    })();
 </script>
 
 </body>

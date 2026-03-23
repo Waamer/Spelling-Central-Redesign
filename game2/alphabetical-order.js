@@ -1,16 +1,62 @@
-// ==================== Word Sets ====================
-const wordSets = [
-    { words: ["apple", "banana", "cherry", "date"], correct: ["apple", "banana", "cherry", "date"] },
-    { words: ["zebra", "ant", "monkey", "bear"], correct: ["ant", "bear", "monkey", "zebra"] },
-    { words: ["sun", "moon", "earth", "mars"], correct: ["earth", "mars", "moon", "sun"] },
-    { words: ["pencil", "book", "eraser", "desk"], correct: ["book", "desk", "eraser", "pencil"] },
-    { words: ["water", "juice", "milk", "soda"], correct: ["juice", "milk", "soda", "water"] },
-    { words: ["red", "blue", "green", "yellow"], correct: ["blue", "green", "red", "yellow"] },
-    { words: ["table", "chair", "lamp", "sofa"], correct: ["chair", "lamp", "sofa", "table"] },
-    { words: ["tiger", "lion", "cat", "dog"], correct: ["cat", "dog", "lion", "tiger"] },
-    { words: ["spring", "summer", "fall", "winter"], correct: ["fall", "spring", "summer", "winter"] },
-    { words: ["pizza", "burger", "pasta", "salad"], correct: ["burger", "pasta", "pizza", "salad"] }
-];
+// ==================== Word Source ====================
+function shuffleWords(words) {
+    const copy = [...words];
+    for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+    }
+    return copy;
+}
+
+function uniqueNormalizedWords(words) {
+    const seen = new Set();
+    const result = [];
+    words.forEach((word) => {
+        const text = String(word || "").trim();
+        if (!text) return;
+        const key = text.toLowerCase();
+        if (seen.has(key)) return;
+        seen.add(key);
+        result.push(text);
+    });
+    return result;
+}
+
+function getWordsFromLibrary() {
+    const dataSource = window.wordLibraryData || { baseLibraries: [] };
+    const params = new URLSearchParams(window.location.search);
+    const mode = params.get("mode");
+    let selectedList = null;
+
+    if (mode === "custom") {
+        try {
+            selectedList = JSON.parse(localStorage.getItem("spellingcentral_selected_list") || "null");
+        } catch (error) {
+            selectedList = null;
+        }
+    }
+
+    const selectedWords = Array.isArray(selectedList?.words) ? selectedList.words : [];
+    const allLibraryWords = (dataSource.baseLibraries || []).flatMap((list) =>
+        Array.isArray(list.words) ? list.words : []
+    );
+
+    const sourceWords = selectedWords.length >= 4 ? selectedWords : allLibraryWords;
+    const normalized = uniqueNormalizedWords(sourceWords);
+
+    if (normalized.length >= 4) {
+        return normalized;
+    }
+
+    // Final fallback keeps the game playable even if storage data is missing.
+    return uniqueNormalizedWords([
+        ...allLibraryWords,
+        "apple",
+        "banana",
+        "cherry",
+        "date"
+    ]);
+}
 
 // ==================== Game State ====================
 let currentRound = 0;
@@ -20,7 +66,7 @@ let currentWordSet = null;
 let availableWords = [];
 let placedWords = [null, null, null, null];
 let showingHint = false;
-let usedSets = [];
+let roundWordPool = [];
 let draggedElement = null;
 
 // ==================== DOM Elements ====================
@@ -36,12 +82,31 @@ const modal = document.getElementById("modal");
 const correctModal = document.getElementById("correctModal");
 const wrongModal = document.getElementById("wrongModal");
 
+function configureHomeLinks() {
+    const params = new URLSearchParams(window.location.search);
+    const mode = params.get("mode");
+    if (!mode) return;
+
+    const targetHref = `../homepage/game-selection.html?mode=${encodeURIComponent(mode)}`;
+    const homePageLink = document.getElementById("homePageLink");
+    const modalHomeLink = document.getElementById("modalHomeLink");
+
+    if (homePageLink) {
+        homePageLink.href = targetHref;
+    }
+    if (modalHomeLink) {
+        modalHomeLink.href = targetHref;
+    }
+}
+
+configureHomeLinks();
+
 // ==================== Start Game ====================
 function startGame() {
     currentRound = 0;
     score = 0;
     totalAttempts = 0;
-    usedSets = [];
+    roundWordPool = shuffleWords(getWordsFromLibrary());
     
     startScreen.classList.add("hidden");
     gameContent.classList.remove("hidden");
@@ -52,27 +117,19 @@ function startGame() {
 // ==================== Setup Next Round ====================
 function nextRoundSetup() {
     currentRound++;
-    
-    // Get a random unused word set
-    let availableSetIndexes = [];
-    for (let i = 0; i < wordSets.length; i++) {
-        if (!usedSets.includes(i)) {
-            availableSetIndexes.push(i);
-        }
+
+    if (roundWordPool.length < 4) {
+        roundWordPool = shuffleWords(getWordsFromLibrary());
     }
-    
-    // If all sets used, reset
-    if (availableSetIndexes.length === 0) {
-        usedSets = [];
-        availableSetIndexes = wordSets.map((_, i) => i);
-    }
-    
-    const randomIndex = availableSetIndexes[Math.floor(Math.random() * availableSetIndexes.length)];
-    usedSets.push(randomIndex);
-    currentWordSet = wordSets[randomIndex];
-    
+
+    const roundWords = roundWordPool.splice(0, 4);
+    currentWordSet = {
+        words: roundWords,
+        correct: [...roundWords].sort((a, b) => a.localeCompare(b))
+    };
+
     // Shuffle words for display
-    availableWords = [...currentWordSet.words].sort(() => Math.random() - 0.5);
+    availableWords = shuffleWords(currentWordSet.words);
     placedWords = [null, null, null, null];
     showingHint = false;
     
