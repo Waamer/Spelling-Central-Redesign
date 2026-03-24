@@ -18,6 +18,31 @@ let current = 0;
 let score = 0;
 let total = 0;
 let missingIndexes = [];
+let gameDifficulty = selectedList && selectedList.difficulty ? selectedList.difficulty : "medium"; // Get difficulty from selected list
+let hintsUsedThisRound = false;
+let dragSourceBox = null; // Track which box is being dragged from
+
+// ---------------------- Difficulty Configuration ----------------------
+const difficultyConfig = {
+    easy: {
+        getMissingCount: (wordLen) => Math.max(2, Math.ceil(wordLen * 0.25)), // 25% of word
+        hintRevealsCount: (wordLen) => Math.ceil(wordLen * 0.4) // Reveals more letters
+    },
+    medium: {
+        getMissingCount: (wordLen) => Math.max(2, Math.ceil(wordLen * 0.4)), // 40% of word
+        hintRevealsCount: (wordLen) => Math.ceil(wordLen * 0.25) // Reveals 25% of remaining
+    },
+    hard: {
+        getMissingCount: (wordLen) => Math.max(3, Math.ceil(wordLen * 0.6)), // 60% of word
+        hintRevealsCount: (wordLen) => Math.max(1, Math.ceil(wordLen * 0.15)) // Reveals only 15%
+    }
+};
+
+// ---------------------- Get Missing Count Based on Difficulty ----------------------
+function getMissingLetterCount(wordLength) {
+    const config = difficultyConfig[gameDifficulty];
+    return config.getMissingCount(wordLength);
+}
 
 // ------------------ Word Setup ------------------
 function setupWord() {
@@ -30,9 +55,13 @@ function setupWord() {
     wordContainer.innerHTML = "";
     optionsContainer.innerHTML = "";
     missingIndexes = [];
+    dragSourceBox = null; // Reset drag state for new word
+    hintsUsedThisRound = false; // Reset hint for new word
 
-    // pick 2 missing letters (or less if word is short)
-    while (missingIndexes.length < 3 && missingIndexes.length < word.length) {
+    // Determine missing letters based on difficulty and word length
+    const missingCount = getMissingLetterCount(word.length);
+    
+    while (missingIndexes.length < missingCount && missingIndexes.length < word.length) {
         let rand = Math.floor(Math.random() * word.length);
         if (!missingIndexes.includes(rand)) missingIndexes.push(rand);
     }
@@ -46,6 +75,8 @@ function setupWord() {
             box.dataset.index = i;
             box.ondragover = (e) => e.preventDefault();
             box.ondrop = dropLetter;
+            box.draggable = true;
+            box.ondragstart = dragFromBox;
         } else {
             box.textContent = letter;
         }
@@ -74,11 +105,31 @@ function setupWord() {
 // ------------------ Drag & Drop ------------------
 function dragLetter(e) {
     e.dataTransfer.setData("text", e.target.textContent);
+    e.dataTransfer.setData("source", "option");
+    dragSourceBox = null;
+}
+
+function dragFromBox(e) {
+    if (e.target.textContent) {
+        e.dataTransfer.setData("text", e.target.textContent);
+        e.dataTransfer.setData("source", "box");
+        dragSourceBox = e.target;
+    }
 }
 
 function dropLetter(e) {
     const letter = e.dataTransfer.getData("text");
+    const source = e.dataTransfer.getData("source");
+    
+    // Set the letter in the destination box
     e.target.textContent = letter;
+    
+    // If dragging from another box, clear it
+    if (source === "box" && dragSourceBox && dragSourceBox !== e.target) {
+        dragSourceBox.textContent = "";
+    }
+    
+    dragSourceBox = null;
 }
 
 // ------------------ Feedback Message ------------------
@@ -88,12 +139,49 @@ function showFeedback(message, isCorrect) {
     feedback.classList.toggle("incorrect", !isCorrect);
 
     feedback.style.opacity = "1";
-    feedback.style.transform = "translateY(0)";
 
     setTimeout(() => {
         feedback.style.opacity = "0";
-        feedback.style.transform = "translateY(-10px)";
     }, 3000);
+}
+
+// ------------------ Hint System ------------------
+function useHint() {
+    if (hintsUsedThisRound) {
+        showFeedback("You already used a hint for this word!", false);
+        return;
+    }
+
+    const word = words[current];
+    const boxes = document.querySelectorAll(".letter-box");
+    
+    // Find empty boxes (missing letters that haven't been filled in)
+    let emptyMissingLetters = [];
+    boxes.forEach((box, i) => {
+        if (missingIndexes.includes(i) && !box.textContent) {
+            emptyMissingLetters.push(word[i]);
+        }
+    });
+
+    if (emptyMissingLetters.length === 0) {
+        showFeedback("All letters are filled!", true);
+        return;
+    }
+    
+    // Get unique letters from unfilled positions
+    const uniqueEmptyLetters = [...new Set(emptyMissingLetters)];
+    
+    // Show only half of the unfilled missing letters
+    const hintCount = Math.ceil(uniqueEmptyLetters.length / 2);
+    const shuffled = uniqueEmptyLetters.sort(() => Math.random() - 0.5);
+    const hintLetters = shuffled.slice(0, hintCount).sort();
+    
+    hintsUsedThisRound = true;
+    const hintBtn = document.getElementById("hintBtn");
+    hintBtn.disabled = true;
+    hintBtn.style.opacity = "0.5";
+    
+    showFeedback(`Hint: ${hintLetters.join(", ")}`, true);
 }
 
 // ------------------ Check Answer ------------------
@@ -121,6 +209,13 @@ function checkAnswer() {
 // ------------------ Next Word ------------------
 function nextWord() {
     current = (current + 1) % words.length;
+    dragSourceBox = null; // Reset drag state
+    
+    // Re-enable hint button for next word
+    const hintBtn = document.getElementById("hintBtn");
+    hintBtn.disabled = false;
+    hintBtn.style.opacity = "1";
+    
     setupWord();
 }
 
@@ -152,7 +247,14 @@ function restart() {
     score = 0;
     total = 0;
     current = 0;
+    dragSourceBox = null; // Reset drag state
     document.getElementById("modal").style.display = "none";
+    
+    // Reset hint button
+    const hintBtn = document.getElementById("hintBtn");
+    hintBtn.disabled = false;
+    hintBtn.style.opacity = "1";
+    
     updateScore();
     setupWord();
 }
