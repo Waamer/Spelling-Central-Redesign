@@ -1,0 +1,346 @@
+/* =====================
+   Global Styles
+===================== */
+body.game-page {
+  --frame-inner: 14px;
+  --frame-outer: 22px;
+  margin: 0;
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow-x: hidden;
+  overflow-y: auto;
+  background:
+    radial-gradient(circle at 22% 18%, rgba(255,255,255,0.08), transparent 40%),
+    radial-gradient(circle at 80% 85%, rgba(255,255,255,0.05), transparent 36%),
+    #2f6b3f;
+  box-shadow:
+    inset 0 0 0 var(--frame-inner) #8a5a31,
+    inset 0 0 0 var(--frame-outer) #5f3d20;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  color: #1f3b2d;
+}
+
+/* =====================
+   Container
+===================== */
+.container {
+  min-height: 100vh;
+  min-height: 100dvh;
+  box-sizing: border-box;
+  padding: calc(var(--frame-outer) + 18px);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 760px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+/* =====================
+   Title
+===================== */
+.title {
+  color: #f4f4ea;
+  text-shadow: 0 3px 2px rgba(0,0,0,0.25);
+  margin: 10px 0 0;
+  font-size: clamp(34px, 5vw, 56px);
+  font-weight: 800;
+}
+
+/* =====================
+   Buttons
+===================== */
+.primary-button,
+.secondary-button {
+  padding: 10px 16px;
+  border-radius: 12px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 3px 0 rgba(0,0,0,0.14);
+  transition: transform 0.12s ease, box-shadow 0.12s ease, opacity 0.12s ease;
+  font-size: 14px;
+}
+
+.primary-button {
+  background: #f2bb4f;
+  border: 2px solid #d79c1f;
+  color: #1f3b2d;
+}
+
+.secondary-button {
+  background: #fffaf0;
+  border: 2px solid #d8c9a8;
+  color: #1f3b2d;
+}
+
+.primary-button:hover,
+.secondary-button:hover {
+  transform: translateY(-1px);
+}
+
+.primary-button:active,
+.secondary-button:active {
+  transform: translateY(1px);
+  box-shadow: 0 1px 0 rgba(0,0,0,0.18);
+}
+
+.primary-button:disabled,
+.secondary-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.home-button {
+  position: fixed;
+  top: 30px;
+  left: 30px;
+  z-index: 100;
+  padding: 10px 18px;
+  font-size: 13px;
+}
+
+/* =====================
+   Layout
+===================== */
+.game-content {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex: 1;
+  padding: 12px 0 30px;
+}
+
+.game-card-main {
+  background: #efe7d1;
+  border: 2px solid #c7b58d;
+  border-radius: 18px;
+  padding: 20px;
+  box-shadow: 0 4px 0 rgba(0,0,0,0.16);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+  max-width: 620px;
+}
+
+.game-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.score {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1f3b2d;
+}
+
+.game-instruction {
+  color: #3d5a47;
+  font-size: 18px;
+  margin: 0;
+  font-weight: 600;
+}
+
+.meta-row {
+  display: flex;
+  justify-content: center;
+}
+
+.meta-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: rgba(47, 107, 63, 0.12);
+  border: 2px solid #b5c1aa;
+  font-size: 13px;
+  font-weight: 700;
+  color: #1f3b2d;
+}
+
+.section-label {
+  color: #1f3b2d;
+  font-size: 12px;
+  font-weight: 700;
+  margin: 0 0 6px 0;
+  text-align: left;
+}
+
+/* =====================
+   Letter Tiles
+===================== */
+.word-cards-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  min-height: 70px;
+  padding: 14px;
+  border-radius: 10px;
+  background: rgba(47, 107, 63, 0.15);
+  border: 2px dashed #8a9a7d;
+}
+
+.word-card {
+  width: 78px;
+  height: 78px;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #fff9eb, #eadcc0);
+  border: 2px solid #c7b58d;
+  box-shadow: 0 2px 0 rgba(0,0,0,0.12);
+  color: #1f3b2d;
+  font-weight: 800;
+  font-size: 28px;
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease;
+  user-select: none;
+}
+
+.word-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 0 rgba(0,0,0,0.15);
+}
+
+.word-card.selected {
+  border-color: #d79c1f;
+  background: linear-gradient(180deg, #ffe7ae, #f2bb4f);
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 4px 0 rgba(0,0,0,0.16);
+}
+
+/* =====================
+   Actions
+===================== */
+.game-actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.game-actions .secondary-button,
+.game-actions .primary-button {
+  min-width: 120px;
+}
+
+/* =====================
+   Feedback
+===================== */
+.feedback-message {
+  text-align: center;
+  font-size: 16px;
+  font-weight: 700;
+  opacity: 1;
+  min-height: 24px;
+  color: #3d5a47;
+}
+
+.feedback-message.correct {
+  color: #27ae60;
+}
+
+.feedback-message.incorrect {
+  color: #c0392b;
+}
+
+/* =====================
+   Progress
+===================== */
+.progress {
+  height: 12px;
+  background: rgba(47, 107, 63, 0.18);
+  border-radius: 999px;
+  overflow: hidden;
+  border: 1px solid rgba(95, 61, 32, 0.18);
+}
+
+.progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #f2bb4f 0%, #d79c1f 100%);
+  border-radius: 999px;
+  transition: width 0.25s ease;
+}
+
+/* =====================
+   Modal
+===================== */
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modal.show {
+  display: flex;
+}
+
+.modal-content {
+  background: #efe7d1;
+  padding: 24px;
+  border-radius: 14px;
+  text-align: center;
+  max-width: 420px;
+  width: 100%;
+  border: 2px solid #c7b58d;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+
+.modal-title {
+  color: #1f3b2d;
+  margin: 0 0 16px 0;
+  font-size: 24px;
+}
+
+.final-message {
+  color: #3d5a47;
+  font-size: 15px;
+  line-height: 1.6;
+  margin-bottom: 14px;
+}
+
+/* =====================
+   Responsive
+===================== */
+@media (max-width: 700px) {
+  .container {
+    padding: calc(var(--frame-outer) + 10px);
+  }
+
+  .home-button {
+    top: 18px;
+    left: 18px;
+  }
+
+  .title {
+    font-size: clamp(26px, 8vw, 40px);
+    margin-top: 28px;
+  }
+
+  .game-card-main {
+    padding: 14px;
+  }
+
+  .word-card {
+    width: 64px;
+    height: 64px;
+    font-size: 24px;
+  }
+
+  .game-header {
+    justify-content: center;
+  }
+
+  .game-instruction {
+    font-size: 16px;
+  }
+}
