@@ -2,15 +2,16 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Word Libraries</title>
+<title>Word Library</title>
 <link rel="stylesheet" href="style.css">
 </head>
 
 <body class="library-page">
+<a href="index.html" class="page-home-btn">HOMEPAGE</a>
 <div class="container">
 
-  <h1 class="title">Word Libraries</h1>
-  <p class="subtitle">Select a list to preview words and manage your library</p>
+  <h1 class="title">Select a Word List</h1>
+  <p class="subtitle">Select a list to play with or manage your library</p>
 
   <div class="library-shell">
 
@@ -61,7 +62,7 @@
         Word count: <span id="wordCount">0</span>
       </p>
       <p class="panel-muted" style="margin-top: 2px;">
-        Tip: double-click a list name to open full list view.
+        Tip: double-click a list on the left to open full list view.
       </p>
   
       <div class="word-preview" aria-label="Word preview (scrollable)">
@@ -69,9 +70,11 @@
       </div>
     </div>
 
-    <button onclick="history.back()" class="back-link back-button" type="button">
-      ← Back
-    </button>
+    <div class="library-bottom-actions">
+      <button id="playWithListBtn" class="tool-btn tool-disabled play-list-btn" type="button" disabled>
+        play with this list
+      </button>
+    </div>
 
   </div>
     </div>
@@ -155,6 +158,7 @@
     const listTitle = document.getElementById("listTitle");
     const wordCount = document.getElementById("wordCount");
     const wordPreview = document.getElementById("wordPreview");
+    const playWithListBtn = document.getElementById("playWithListBtn");
   
     const exportBtn = document.getElementById("exportBtn");
     const importBtn = document.getElementById("importBtn");
@@ -251,12 +255,16 @@
       // Export disabled (grey)
       exportBtn.disabled = true;
       exportBtn.classList.add("tool-disabled");
+      playWithListBtn.disabled = true;
+      playWithListBtn.classList.add("tool-disabled");
     }
   
     function enableExport() {
       // Export enabled
       exportBtn.disabled = false;
       exportBtn.classList.remove("tool-disabled");
+      playWithListBtn.disabled = false;
+      playWithListBtn.classList.remove("tool-disabled");
     }
 
     function getFilteredLibraries() {
@@ -894,6 +902,13 @@
       closeAddModal();
       renderLibraryList();
       setSelected(id);
+    });
+
+    playWithListBtn.addEventListener("click", () => {
+      const selectedItem = libraries.find((lib) => lib.id === selectedId);
+      if (!selectedItem) return;
+      localStorage.setItem("spellingcentral_selected_list", JSON.stringify(selectedItem));
+      window.location.href = "game-selection.html?mode=custom";
     });
 
     exportBtn.addEventListener("click", () => {
