@@ -364,11 +364,17 @@ function getMatchedSelection() {
       return;
     }
 
-    matched.found = true;
-    setStatus(`Found ${matched.word}. Nice job.`);
-    clearSelection({ silentStatus: true });
-    renderWordList();
-    renderBoard();
+matched.found = true;
+
+tryWordBtn.classList.add("word-search-correct");
+window.setTimeout(() => {
+  tryWordBtn.classList.remove("word-search-correct");
+}, 320);
+
+setStatus(`Found ${matched.word}. Nice job.`);
+clearSelection({ silentStatus: true });
+renderWordList();
+renderBoard();
 
     if (placedWords.every((word) => word.found)) {
       finishGame(true);
