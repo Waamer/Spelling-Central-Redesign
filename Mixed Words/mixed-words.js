@@ -34,6 +34,7 @@ function shuffleWord(word) {
   let attempts = 0;
 
   do {
+    chars = word.split('');
     for (let i = chars.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [chars[i], chars[j]] = [chars[j], chars[i]];
@@ -50,28 +51,29 @@ function getCurrentWord() {
 
 function setFeedback(message, type = 'idle') {
   feedbackTextEl.textContent = message;
-  feedbackTextEl.className = 'feedback-pill';
-  feedbackTextEl.classList.add(
-    type === 'success'
-      ? 'feedback-success'
-      : type === 'error'
-      ? 'feedback-error'
-      : 'feedback-idle'
-  );
+  feedbackTextEl.className = 'feedback-message';
+
+  if (type === 'success') {
+    feedbackTextEl.classList.add('correct');
+  } else if (type === 'error') {
+    feedbackTextEl.classList.add('incorrect');
+  }
 }
 
 function updateStats() {
   scoreTextEl.textContent = `${state.score} / ${state.words.length}`;
   roundTextEl.textContent = `${Math.min(state.currentIndex + 1, state.words.length)} / ${state.words.length}`;
+
   const currentWord = getCurrentWord() || '';
   targetLengthEl.textContent = `${currentWord.length} ${currentWord.length === 1 ? 'letter' : 'letters'}`;
 
-  const progress = (state.currentIndex / state.words.length) * 100;
+  const progress = ((state.currentIndex + (state.gameFinished ? 1 : 0)) / state.words.length) * 100;
   progressBarEl.style.width = `${Math.max(8, progress)}%`;
 }
 
 function updateButtons() {
   const canMove = state.selectedIndex !== null && !state.gameFinished;
+
   moveLeftBtn.disabled = !canMove || state.selectedIndex === 0;
   moveRightBtn.disabled = !canMove || state.selectedIndex === state.currentLetters.length - 1;
   nextWordBtn.disabled = state.gameFinished;
@@ -84,19 +86,19 @@ function renderTiles() {
 
   state.currentLetters.forEach((letter, index) => {
     const button = document.createElement('button');
-    button.className = 'tile';
+    button.className = 'word-card';
 
     if (index === state.selectedIndex) {
       button.classList.add('selected');
     }
 
-    button.textContent = letter;
+    button.textContent = letter.toUpperCase();
     button.setAttribute('aria-label', `Letter ${letter}, position ${index + 1}`);
 
     button.addEventListener('click', () => {
       if (state.gameFinished) return;
       state.selectedIndex = index;
-      setFeedback(`Selected “${letter.toUpperCase()}”. Use arrows to move it.`, 'idle');
+      setFeedback(`Selected "${letter.toUpperCase()}". Use arrows to move it.`, 'idle');
       render();
     });
 
@@ -122,7 +124,9 @@ function loadWord(index) {
 function moveSelected(direction) {
   if (state.selectedIndex === null || state.gameFinished) return;
 
-  const newIndex = direction === 'left' ? state.selectedIndex - 1 : state.selectedIndex + 1;
+  const newIndex = direction === 'left'
+    ? state.selectedIndex - 1
+    : state.selectedIndex + 1;
 
   if (newIndex < 0 || newIndex >= state.currentLetters.length) return;
 
@@ -159,7 +163,7 @@ function checkWord() {
       }
     }, 900);
   } else {
-    setFeedback(`Not quite. You made “${guess.toUpperCase()}”. Try again.`, 'error');
+    setFeedback(`Not quite. You made "${guess.toUpperCase()}". Try again.`, 'error');
   }
 }
 
@@ -188,6 +192,7 @@ function finishGame() {
 backBtn.addEventListener('click', () => {
   window.location.href = '../homepage/index.html';
 });
+
 moveLeftBtn.addEventListener('click', () => moveSelected('left'));
 moveRightBtn.addEventListener('click', () => moveSelected('right'));
 nextWordBtn.addEventListener('click', checkWord);
@@ -196,24 +201,24 @@ shuffleBtn.addEventListener('click', reshuffleCurrent);
 finishBtn.addEventListener('click', finishGame);
 
 helpBtn.addEventListener('click', () => {
-  helpModal.classList.add('open');
+  helpModal.classList.add('show');
   helpModal.setAttribute('aria-hidden', 'false');
 });
 
 closeHelpBtn.addEventListener('click', () => {
-  helpModal.classList.remove('open');
+  helpModal.classList.remove('show');
   helpModal.setAttribute('aria-hidden', 'true');
 });
 
 helpModal.addEventListener('click', (event) => {
   if (event.target === helpModal) {
-    helpModal.classList.remove('open');
+    helpModal.classList.remove('show');
     helpModal.setAttribute('aria-hidden', 'true');
   }
 });
 
 document.addEventListener('keydown', (event) => {
-  if (helpModal.classList.contains('open') && event.key !== 'Escape') return;
+  if (helpModal.classList.contains('show') && event.key !== 'Escape') return;
 
   if (event.key === 'ArrowLeft') {
     event.preventDefault();
@@ -225,5 +230,13 @@ document.addEventListener('keydown', (event) => {
     event.preventDefault();
     checkWord();
   } else if (event.key === 'Escape') {
-    if (helpModal.classList.contains('open')) {
-      help
+    if (helpModal.classList.contains('show')) {
+      helpModal.classList.remove('show');
+      helpModal.setAttribute('aria-hidden', 'true');
+    } else {
+      clearSelection();
+    }
+  }
+});
+
+loadWord(0);

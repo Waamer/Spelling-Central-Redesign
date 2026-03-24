@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mixed Words</title>
+  <link rel="stylesheet" href="mixed-words.css" />
+  <script src="mixed-words.js" defer></script>
+</head>
+<body class="game-page">
+  <button class="secondary-button home-button" id="backBtn" aria-label="Go back to homepage">
+    Home Page
+  </button>
+
+  <div class="container">
+    <h1 class="title">Mixed Words</h1>
+
+    <div class="game-content">
+      <div class="game-card-main">
+        <div class="game-header">
+          <div class="score">Score: <span id="scoreText">0 / 0</span></div>
+          <div class="score">Round: <span id="roundText">1 / 1</span></div>
+        </div>
+
+        <p class="game-instruction">
+          Arrange the letters to spell the word.
+        </p>
+
+        <div class="meta-row">
+          <div class="meta-pill">Target: <span id="targetLength">0 letters</span></div>
+        </div>
+
+        <div class="progress">
+          <div class="progress-bar" id="progressBar" style="width: 0%"></div>
+        </div>
+
+        <div class="word-cards-section">
+          <p class="section-label">Letters</p>
+          <div class="word-cards-container" id="tiles" aria-label="Letter tiles"></div>
+        </div>
+
+        <div class="game-actions">
+          <button class="secondary-button" id="moveLeftBtn" aria-label="Move selected letter left">← Left</button>
+          <button class="secondary-button" id="moveRightBtn" aria-label="Move selected letter right">Right →</button>
+          <button class="primary-button" id="nextWordBtn">Check Word</button>
+        </div>
+
+        <div class="game-actions">
+          <button class="secondary-button" id="clearSelectionBtn">Clear Selection</button>
+          <button class="secondary-button" id="shuffleBtn">Reshuffle</button>
+          <button class="secondary-button" id="finishBtn">Finish</button>
+          <button class="secondary-button" id="helpBtn">How to Play</button>
+        </div>
+
+        <div class="feedback-message" id="feedbackText">
+          Pick a tile to start. Press Enter to check your word.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="helpModal" aria-hidden="true">
+    <div class="modal-content">
+      <h2 class="modal-title">How to Play</h2>
+      <p class="final-message">
+        Click a tile to select it. Move the selected tile using the left and right buttons,
+        or use your keyboard arrow keys.
+      </p>
+      <p class="final-message">
+        When the letters form the correct word, press Enter or click <strong>Check Word</strong>.
+      </p>
+      <p class="final-message">
+        Press Escape to clear the current selection.
+      </p>
+      <button class="primary-button" id="closeHelpBtn">Close</button>
+    </div>
+  </div>
+</body>
+</html>
