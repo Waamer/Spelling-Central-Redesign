@@ -20,6 +20,12 @@ body {
     margin-bottom: 60px;
 }
 
+.logo {
+    width: 300px;
+    height: auto;
+    margin-bottom: 40px;
+}
+
 .button-group {
     display: flex;
     flex-direction: column;
