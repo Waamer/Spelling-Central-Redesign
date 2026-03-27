@@ -502,6 +502,7 @@
 
     boardEl.innerHTML = "";
     boardEl.style.gridTemplateColumns = `repeat(${GRID_SIZE}, 1fr)`;
+    boardEl.style.gridTemplateRows = `repeat(${GRID_SIZE}, 1fr)`;
 
     for (let row = 0; row < GRID_SIZE; row += 1) {
       for (let col = 0; col < GRID_SIZE; col += 1) {
