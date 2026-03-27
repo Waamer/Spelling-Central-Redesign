@@ -7,72 +7,149 @@
   <link rel="stylesheet" href="mixed-words.css" />
   <script src="mixed-words.js" defer></script>
 </head>
-<body class="game-page">
-  <button class="secondary-button home-button" id="backBtn" aria-label="Go back to homepage">
-    Home Page
-  </button>
+<body class="mixed-words-page">
+  <a href="/homepage/game-selection.html" class="page-home-btn">← GAME SELECTION</a>
+  <button id="helpBtn" class="mixed-words-help-btn" type="button" aria-label="Open help">?</button>
 
-  <div class="container">
-    <h1 class="title">Mixed Words</h1>
+  <div class="container mixed-words-container">
+    <header class="mixed-words-header">
+      <div class="mixed-words-heading">
+        <h1 class="title">Mixed Words</h1>
+        <p class="subtitle">Arrange the scrambled letters to spell the correct word.</p>
+      </div>
 
-    <div class="game-content">
-      <div class="game-card-main">
-        <div class="game-header">
-          <div class="score">Score: <span id="scoreText">0 / 0</span></div>
-          <div class="score">Round: <span id="roundText">1 / 1</span></div>
+      <div class="mixed-words-top-actions">
+        <div class="mixed-words-status-card" aria-live="polite">
+          <span class="status-card-label">Status</span>
+          <span id="feedbackText" class="status-card-text">Pick a tile to start.</span>
         </div>
 
-        <p class="game-instruction">
-          Arrange the letters to spell the word.
-        </p>
-
-        <div class="meta-row">
-          <div class="meta-pill">Target: <span id="targetLength">0 letters</span></div>
+        <div class="mixed-words-status-card">
+          <span class="status-card-label">Score</span>
+          <span id="scoreText" class="status-card-text">0 / 0</span>
         </div>
 
-        <div class="progress">
-          <div class="progress-bar" id="progressBar" style="width: 0%"></div>
+        <div class="mixed-words-status-card">
+          <span class="status-card-label">Round</span>
+          <span id="roundText" class="status-card-text">1 / 1</span>
+        </div>
+      </div>
+    </header>
+
+    <main class="mixed-words-layout">
+      <section class="mixed-words-board-panel">
+        <div class="mixed-words-instructions panel-muted">
+          <span>Click a tile, then move it left or right.</span>
+          <span class="mixed-words-key-hint">
+            <span class="mixed-words-keycap">← →</span> Move
+          </span>
+          <span class="mixed-words-key-hint">
+            <span class="mixed-words-keycap">Enter</span> Check
+          </span>
+          <span class="mixed-words-key-hint">
+            <span class="mixed-words-keycap">Esc</span> Clear
+          </span>
         </div>
 
-        <div class="word-cards-section">
-          <p class="section-label">Letters</p>
-          <div class="word-cards-container" id="tiles" aria-label="Letter tiles"></div>
+        <div class="mixed-words-board-shell">
+          <div class="mixed-words-game-card">
+            <p class="game-instruction">Arrange the letters to spell the word.</p>
+
+            <div class="meta-row">
+              <div class="meta-pill">Target: <span id="targetLength">0 letters</span></div>
+            </div>
+
+            <div class="progress" aria-hidden="true">
+              <div id="progressBar" class="progress-bar"></div>
+            </div>
+
+            <div class="word-cards-section">
+              <p class="section-label">Letters</p>
+              <div id="tiles" class="word-cards-container" aria-label="Letter tiles"></div>
+            </div>
+
+            <div class="game-actions">
+              <button class="tool-btn" id="moveLeftBtn" type="button" aria-label="Move selected letter left">← Left</button>
+              <button class="tool-btn" id="moveRightBtn" type="button" aria-label="Move selected letter right">Right →</button>
+              <button class="tool-btn mixed-words-primary" id="nextWordBtn" type="button">Check Word</button>
+            </div>
+
+            <div class="game-actions">
+              <button class="tool-btn" id="clearSelectionBtn" type="button">Clear Selection</button>
+              <button class="tool-btn" id="shuffleBtn" type="button">Reshuffle</button>
+              <button class="tool-btn" id="finishBtn" type="button">Finish Game</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Finish Modal -->
+  <div id="gameCompleteModal" class="mixed-words-modal hidden" role="dialog" aria-modal="true" aria-labelledby="gameCompleteTitle">
+    <div class="mixed-words-modal-panel mixed-words-results-panel">
+      <h2 id="gameCompleteTitle" class="mixed-words-results-title">Game Complete</h2>
+      <p id="gameCompleteMessage" class="mixed-words-results-subtitle">Nice work.</p>
+
+      <div class="mixed-words-results-stats">
+        <div class="mixed-words-results-stat">
+          <div id="gameCompleteScoreValue" class="mixed-words-results-stat-value">0</div>
+          <div class="mixed-words-results-stat-label">Score</div>
         </div>
 
-        <div class="game-actions">
-          <button class="secondary-button" id="moveLeftBtn" aria-label="Move selected letter left">← Left</button>
-          <button class="secondary-button" id="moveRightBtn" aria-label="Move selected letter right">Right →</button>
-          <button class="primary-button" id="nextWordBtn">Check Word</button>
+        <div class="mixed-words-results-stat">
+          <div id="gameCompleteRoundsValue" class="mixed-words-results-stat-value">0</div>
+          <div class="mixed-words-results-stat-label">Rounds</div>
         </div>
+      </div>
 
-        <div class="game-actions">
-          <button class="secondary-button" id="clearSelectionBtn">Clear Selection</button>
-          <button class="secondary-button" id="shuffleBtn">Reshuffle</button>
-          <button class="secondary-button" id="finishBtn">Finish</button>
-          <button class="secondary-button" id="helpBtn">How to Play</button>
-        </div>
-
-        <div class="feedback-message" id="feedbackText">
-          Pick a tile to start. Press Enter to check your word.
-        </div>
+      <div class="mixed-words-results-actions">
+        <button id="playAgainBtn" class="tool-btn" type="button">Play Again</button>
+        <a href="/homepage/game-selection.html" class="page-home-btn mixed-words-results-back-btn">← GAME SELECTION</a>
       </div>
     </div>
   </div>
 
-  <div class="modal" id="helpModal" aria-hidden="true">
-    <div class="modal-content">
-      <h2 class="modal-title">How to Play</h2>
-      <p class="final-message">
-        Click a tile to select it. Move the selected tile using the left and right buttons,
-        or use your keyboard arrow keys.
-      </p>
-      <p class="final-message">
-        When the letters form the correct word, press Enter or click <strong>Check Word</strong>.
-      </p>
-      <p class="final-message">
-        Press Escape to clear the current selection.
-      </p>
-      <button class="primary-button" id="closeHelpBtn">Close</button>
+  <!-- Help Modal -->
+  <div id="helpModal" class="mixed-words-help-modal hidden" role="dialog" aria-modal="true" aria-labelledby="helpModalTitle">
+    <div class="mixed-words-help-panel mixed-words-tutorial-panel" role="document">
+      <button id="helpCloseBtn" class="mixed-words-help-close" type="button" aria-label="Close help">X</button>
+
+      <div class="mw-tut-header">
+        <div class="mw-tut-header-main">
+          <span class="mw-tut-header-icon">🔤</span>
+          <div class="mw-tut-header-copy">
+            <h2 id="helpModalTitle" class="mw-tut-title">Mixed Words Tutorial</h2>
+            <p class="mw-tut-subtitle">A quick walkthrough of how this game works.</p>
+          </div>
+        </div>
+
+        <div class="mw-tut-progress-wrap">
+          <span id="mwTutStepLabel" class="mw-tut-step-label">Step 1 of 4</span>
+          <div class="mw-tut-progress-bar" aria-hidden="true">
+            <div id="mwTutProgressFill" class="mw-tut-progress-fill"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mw-tut-body">
+        <div class="mw-tut-explain">
+          <div class="mw-tut-step-num-wrap">
+            <span id="mwTutStepNum" class="mw-tut-step-num">1</span>
+            <span id="mwTutStepOf" class="mw-tut-step-of">of 4</span>
+          </div>
+          <h3 id="mwTutStepTitle" class="mw-tut-step-title"></h3>
+          <p id="mwTutStepBody" class="mw-tut-step-body"></p>
+        </div>
+
+        <div id="mwTutDemo" class="mw-tut-demo"></div>
+      </div>
+
+      <div class="mw-tut-footer">
+        <button id="mwTutPrevBtn" class="tool-btn" type="button" disabled>← Previous</button>
+        <div id="mwTutDots" class="mw-tut-dots"></div>
+        <button id="mwTutNextBtn" class="tool-btn" type="button">Next →</button>
+      </div>
     </div>
   </div>
 </body>
