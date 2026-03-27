@@ -7,7 +7,7 @@
 </head>
 
 <body class="game-page">
-<a href="index.html" class="page-home-btn">HOMEPAGE</a>
+<a href="index.html" class="page-home-btn">← HOMEPAGE</a>
 
 <div class="container">
 
@@ -17,19 +17,18 @@
 
     <div class="game-grid">
 
-        <a href="/game1/missingLetter.html" class="game-card">
+        <a href="../game1/missingLetter.html" class="game-card">
             <h2>Missing Letter</h2>
         </a>
-
-        <a href="/game2/alphabetical-order.html" class="game-card">
+        <a href="../game2/alphabetical-order.html" class="game-card">
             <h2>Alphabetical Order</h2>
         </a>
 
-        <a href="/Mixed Words/mixed-words.html" class="game-card">
+        <a href="../Mixed Words/mixed-words.html" class="game-card">
             <h2>Mixed Words</h2>
         </a>
 
-        <a href="/WordSearch/word-search.html" class="game-card">
+        <a id="wordSearchCard" href="../WordSearch/word-search.html" class="game-card">
             <h2>Word Search</h2>
         </a>
 
@@ -53,6 +52,7 @@
 <script src="word-lists.js"></script>
 <script>
     const infoEl = document.getElementById("selectedListInfo");
+    const wordSearchCard = document.getElementById("wordSearchCard");
     const fullListModal = document.getElementById("fullListModal");
     const fullListTitle = document.getElementById("fullListTitle");
     const fullListCount = document.getElementById("fullListCount");
@@ -62,7 +62,44 @@
     const mode = params.get("mode");
     let selectedList = null;
 
-    if (mode === "custom") {
+    const isPrintMode = mode === "print" || mode === "printable";
+
+    if (isPrintMode && wordSearchCard) {
+        wordSearchCard.href = "../WordSearch/word-search-printable.html?autoprint=0";
+        wordSearchCard.addEventListener("click", (event) => {
+            event.preventDefault();
+            const printFrame = document.createElement("iframe");
+            printFrame.style.position = "fixed";
+            printFrame.style.width = "0";
+            printFrame.style.height = "0";
+            printFrame.style.border = "0";
+            printFrame.style.opacity = "0";
+            printFrame.setAttribute("aria-hidden", "true");
+            printFrame.src = "../WordSearch/word-search-printable.html?autoprint=0";
+
+            const cleanup = () => {
+                window.setTimeout(() => {
+                    if (printFrame.parentNode) {
+                        printFrame.parentNode.removeChild(printFrame);
+                    }
+                }, 1200);
+            };
+
+            printFrame.addEventListener("load", () => {
+                try {
+                    printFrame.contentWindow.focus();
+                    printFrame.contentWindow.print();
+                } catch (error) {
+                    window.open("../WordSearch/word-search-printable.html?autoprint=1", "_blank");
+                }
+                cleanup();
+            });
+
+            document.body.appendChild(printFrame);
+        });
+    }
+
+    if (mode === "custom" || isPrintMode) {
         try {
             selectedList = JSON.parse(localStorage.getItem("spellingcentral_selected_list") || "null");
         } catch (error) {
@@ -89,9 +126,11 @@
         fullListWords.innerHTML = "";
     }
 
-    if (mode === "custom" && selectedList) {
+    if ((mode === "custom" || isPrintMode) && selectedList) {
         const listTitle = selectedList.title || "Custom List";
-        infoEl.textContent = `Selected list: ${listTitle}`;
+        infoEl.textContent = isPrintMode
+            ? `PRINT MODE | Selected list: ${listTitle}`
+            : `Selected list: ${listTitle}`;
         infoEl.classList.remove("hidden");
         infoEl.addEventListener("click", () => openFullListModal(selectedList));
     } else {

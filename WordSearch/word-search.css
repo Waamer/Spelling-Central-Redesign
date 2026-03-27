@@ -13,11 +13,11 @@
     text-align: center;
     --frame-inner: 14px;
     --frame-outer: 22px;
-    --board-max-size: calc(100dvh - 250px);
+    --board-max-size: calc(100dvh - 300px);
     margin: 0;
     min-height: 100vh;
     min-height: 100dvh;
-    overflow: hidden;
+    overflow: auto;
     background:
         radial-gradient(circle at 22% 18%, rgba(255,255,255,0.08), transparent 40%),
         radial-gradient(circle at 80% 85%, rgba(255,255,255,0.05), transparent 36%),
@@ -254,6 +254,7 @@
     display: grid;
     grid-template-columns: minmax(0, 1fr) 300px;
     gap: 12px;
+    overflow: hidden;
 }
 
 .word-search-board-panel,
@@ -270,10 +271,11 @@
    ========================= */
 .word-search-board-panel {
     padding: 8px;
-    max-height: 830px;
     display: flex;
     flex-direction: column;
+    height: 100%;
     min-height: 0;
+    overflow: hidden;
 }
 
 .word-search-instructions {
@@ -402,7 +404,8 @@
     padding: 12px;
     gap: 10px;
     min-height: 0;
-    max-height: 830px;
+    height: 100%;
+    overflow: hidden;
 }
 
 .word-search-panel {
@@ -1354,7 +1357,7 @@
    ========================= */
 @media (max-height: 900px) {
     .word-search-page {
-        --board-max-size: calc(100dvh - 230px);
+        --board-max-size: calc(100dvh - 280px);
     }
 
     .word-search-page .container.word-search-container {
@@ -1412,7 +1415,7 @@
     .word-search-page {
         --frame-inner: 10px;
         --frame-outer: 14px;
-        --board-max-size: calc(100dvh - 205px);
+        --board-max-size: calc(100dvh - 250px);
     }
 
     .word-search-page .container.word-search-container {
@@ -1783,7 +1786,8 @@
 
 @media (max-width: 1600px) {
     .word-search-page .container.word-search-container {
-        height: auto;
+        height: 100vh;
+        height: 100dvh;
         min-height: 100vh;
         min-height: 100dvh;
         padding:

@@ -7,7 +7,7 @@
 </head>
 
 <body class="library-page">
-<a href="index.html" class="page-home-btn">HOMEPAGE</a>
+<a href="index.html" class="page-home-btn">← HOMEPAGE</a>
 <div class="container">
 
   <h1 class="title">Select a Word List</h1>
@@ -191,6 +191,9 @@
     const fullListWords = document.getElementById("fullListWords");
     const closeFullListBtn = document.getElementById("closeFullListBtn");
     const libraryFilter = document.getElementById("libraryFilter");
+    const pageParams = new URLSearchParams(window.location.search);
+    const pageMode = (pageParams.get("mode") || "").toLowerCase();
+    const isPrintMode = pageMode === "print" || pageMode === "printable";
     let pendingImportWords = [];
     let pendingImportHasDuplicates = false;
     const WORDS_PER_PAGE = 25;
@@ -783,6 +786,12 @@
       enableExport();
     }
   
+    if (isPrintMode) {
+      playWithListBtn.textContent = "print with this list";
+    } else {
+      playWithListBtn.textContent = "play with this list";
+    }
+
     // Default: nothing selected
     setSelected(null);
     renderLibraryList();
@@ -908,7 +917,8 @@
       const selectedItem = libraries.find((lib) => lib.id === selectedId);
       if (!selectedItem) return;
       localStorage.setItem("spellingcentral_selected_list", JSON.stringify(selectedItem));
-      window.location.href = "game-selection.html?mode=custom";
+      const nextMode = isPrintMode ? "print" : "custom";
+      window.location.href = `game-selection.html?mode=${nextMode}`;
     });
 
     exportBtn.addEventListener("click", () => {
