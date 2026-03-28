@@ -10,7 +10,7 @@
 <body class="game-page">
 
 <a id="homePageLink" href="../homepage/game-selection.html" class="page-home-btn">← GAME SELECTION</a>
-<button id="helpBtn" class="alphabetical-order-help-btn" type="button" aria-label="Toggle hint" onclick="toggleHint()">?</button>
+<button id="helpBtn" class="alphabetical-order-help-btn" type="button" aria-label="Open help">?</button>
 
 <div class="container">
 
@@ -129,6 +129,52 @@
             <button class="secondary-button" onclick="showHintFromWrong()">Show Hint</button>
         </div>
     </div>
+</div>
+
+<!-- Help Tutorial Panel (Game Tutorial style) -->
+<div id="tut-panel" class="tut-panel" role="dialog" aria-modal="true" aria-labelledby="tut-title">
+
+    <div class="tut-shell" role="document">
+
+    <div class="tut-header">
+        <button id="helpCloseBtn" class="tool-btn tut-back-btn" type="button">← Back</button>
+        <div class="tut-header-center">
+            <span id="tut-icon" class="tut-icon">🔤</span>
+            <span id="tut-title" class="tut-title">Alphabetical Order</span>
+        </div>
+        <div class="tut-prog-wrap">
+            <span id="tut-step-label" class="tut-step-label"></span>
+            <div class="tut-prog-bar"><div id="tut-prog-fill" class="tut-prog-fill"></div></div>
+        </div>
+    </div>
+
+    <div class="tut-body">
+        <div class="tut-explain" id="tut-explain">
+            <div class="step-num-wrap">
+                <span class="step-num" id="step-num">1</span>
+                <span class="step-of" id="step-of">of 4</span>
+            </div>
+            <h2 class="step-title" id="step-title"></h2>
+            <p class="step-body" id="step-body"></p>
+        </div>
+        <div class="tut-demo" id="tut-demo"></div>
+    </div>
+
+    <div class="tut-footer">
+        <button class="tool-btn" id="btn-prev" type="button" disabled>← Previous</button>
+        <div class="tut-dots" id="tut-dots"></div>
+        <button class="tool-btn tut-next-btn" id="btn-next" type="button">Next →</button>
+    </div>
+
+    </div>
+
+</div>
+
+<!-- Fake Cursor (matches Game Tutorial) -->
+<div id="cursor" class="fake-cursor" aria-hidden="true">
+    <svg width="22" height="26" viewBox="0 0 22 26" fill="none">
+        <path d="M1 1L1 20L5.5 15.5L8.5 22L11 21L8 14.5L14.5 14.5L1 1Z" fill="white" stroke="#1f3b2d" stroke-width="1.5"/>
+    </svg>
 </div>
 
 <script src="../homepage/word-lists.js"></script>

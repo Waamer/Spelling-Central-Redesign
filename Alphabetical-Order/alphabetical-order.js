@@ -81,6 +81,47 @@ const hintBtnText = document.getElementById("hintBtnText");
 const modal = document.getElementById("modal");
 const correctModal = document.getElementById("correctModal");
 const wrongModal = document.getElementById("wrongModal");
+const helpBtn = document.getElementById("helpBtn");
+const tutPanel = document.getElementById("tut-panel");
+const helpCloseBtn = document.getElementById("helpCloseBtn");
+const tutStepLabel = document.getElementById("tut-step-label");
+const tutProgFill = document.getElementById("tut-prog-fill");
+const stepNum = document.getElementById("step-num");
+const stepOf = document.getElementById("step-of");
+const stepTitle = document.getElementById("step-title");
+const stepBody = document.getElementById("step-body");
+const tutDemo = document.getElementById("tut-demo");
+const tutDots = document.getElementById("tut-dots");
+const btnPrev = document.getElementById("btn-prev");
+const btnNext = document.getElementById("btn-next");
+
+const cursorEl = document.getElementById("cursor");
+let cursorTimers = [];
+let curStep = 0;
+let cleanupFn = null;
+
+const AL_TUTORIAL_STEPS = [
+    {
+        title: "The Goal",
+        body: "Four word cards appear in a random order. Drag each card into the correct numbered slot so the words are arranged from A to Z.",
+        build: buildAL1
+    },
+    {
+        title: "Drag Cards into Slots",
+        body: "Pick up a word card and drop it in the slot where it belongs. The red × button next to any filled slot lets you remove that word and place it again.",
+        build: buildAL2
+    },
+    {
+        title: "Right & Wrong Order",
+        body: "When all four slots are filled the game checks automatically. Correct — a green banner appears. Wrong — a Not quite panel shows the issue with Try Again and Show Hint options.",
+        build: buildAL3
+    },
+    {
+        title: "Score & Results",
+        body: "Complete all rounds to see your final score. Your accuracy percentage, number of correct answers, and time elapsed are shown on the results screen.",
+        build: buildAL4
+    }
+];
 
 function configureHomeLinks() {
     const params = new URLSearchParams(window.location.search);
@@ -100,6 +141,387 @@ function configureHomeLinks() {
 }
 
 configureHomeLinks();
+
+function openHelpModal() {
+    if (!tutPanel) return;
+    curStep = 0;
+    tutPanel.classList.add("open");
+    renderTutorialStep();
+}
+
+function closeHelpModal() {
+    stopCleanup();
+    if (!tutPanel) return;
+    tutPanel.classList.remove("open");
+}
+
+function renderTutorialStep() {
+    stopCleanup();
+
+    const step = AL_TUTORIAL_STEPS[curStep];
+    const total = AL_TUTORIAL_STEPS.length;
+
+    tutStepLabel.textContent = `Step ${curStep + 1} of ${total}`;
+    tutProgFill.style.width = `${((curStep + 1) / total) * 100}%`;
+    stepNum.textContent = curStep + 1;
+    stepOf.textContent = `of ${total}`;
+
+    stepTitle.style.opacity = "0";
+    stepBody.style.opacity = "0";
+    setTimeout(() => {
+        stepTitle.textContent = step.title;
+        stepBody.textContent = step.body;
+        stepTitle.style.transition = "opacity .3s";
+        stepBody.style.transition = "opacity .3s";
+        stepTitle.style.opacity = "1";
+        stepBody.style.opacity = "1";
+    }, 80);
+
+    tutDots.innerHTML = AL_TUTORIAL_STEPS
+        .map((_, i) => `<button class="tut-dot${i === curStep ? " active" : ""}" type="button" data-step="${i}" aria-label="Go to step ${i + 1}"></button>`)
+        .join("");
+
+    btnPrev.disabled = curStep === 0;
+    btnNext.textContent = curStep === total - 1 ? "✓ Done" : "Next →";
+
+    tutDemo.innerHTML = "";
+    const r = step.build(tutDemo);
+    if (typeof r === "function") cleanupFn = r;
+
+    tutDots.querySelectorAll(".tut-dot").forEach((dot) => {
+        dot.addEventListener("click", () => {
+            curStep = Number(dot.dataset.step);
+            renderTutorialStep();
+        });
+    });
+}
+
+function stopCleanup() {
+    if (cleanupFn) {
+        try {
+            cleanupFn();
+        } catch (error) {
+            // no-op
+        }
+        cleanupFn = null;
+    }
+    hideCursor();
+}
+
+function nextTutorialStep() {
+    if (curStep < AL_TUTORIAL_STEPS.length - 1) {
+        curStep += 1;
+        renderTutorialStep();
+    } else {
+        closeHelpModal();
+    }
+}
+
+function prevTutorialStep() {
+    if (curStep > 0) {
+        curStep -= 1;
+        renderTutorialStep();
+    }
+}
+
+function hideCursor() {
+    cursorTimers.forEach(clearTimeout);
+    cursorTimers = [];
+    if (cursorEl) {
+        cursorEl.classList.remove("visible");
+    }
+}
+
+function moveCursor(x, y, cb, delay = 0) {
+    const t = setTimeout(() => {
+        if (!cursorEl) return;
+        cursorEl.classList.add("visible");
+        cursorEl.style.left = `${x}px`;
+        cursorEl.style.top = `${y}px`;
+        if (cb) {
+            const t2 = setTimeout(cb, 560);
+            cursorTimers.push(t2);
+        }
+    }, delay);
+    cursorTimers.push(t);
+}
+
+function clickAt(x, y, delay = 0, cb) {
+    moveCursor(x, y, () => {
+        const ripple = document.createElement("div");
+        ripple.className = "cursor-click";
+        ripple.style.left = `${x}px`;
+        ripple.style.top = `${y}px`;
+        document.body.appendChild(ripple);
+        setTimeout(() => ripple.remove(), 520);
+        if (cb) cb();
+    }, delay);
+}
+
+function centre(el) {
+    const rect = el.getBoundingClientRect();
+    return {
+        x: rect.left + rect.width / 2,
+        y: rect.top + rect.height / 2
+    };
+}
+
+function topbar(title, stat = "") {
+    return `<div class="demo-topbar"><span class="demo-topbar-title">${title}</span>${stat ? `<span class="demo-topbar-stat">${stat}</span>` : ""}</div>`;
+}
+
+function finalScore(emoji, title, sub, correct, wrong, extra = "") {
+    return `<div class="demo-screen" style="max-width:300px;margin:0 auto">
+        ${topbar(title)}
+        <div class="demo-content" style="text-align:center;padding:16px 12px">
+            <div style="font-size:38px;margin-bottom:6px">${emoji}</div>
+            <div style="font-family:inherit;font-size:15px;font-weight:700;color:#1f3b2d;margin-bottom:12px">${sub}</div>
+            <div class="demo-score">
+                <div class="demo-score-box"><div class="demo-score-val" style="color:#3f6b43">${correct}</div><div class="demo-score-lbl">Correct</div></div>
+                <div class="demo-score-box"><div class="demo-score-val" style="color:#7c2e25">${wrong}</div><div class="demo-score-lbl">Wrong</div></div>
+                ${extra}
+            </div>
+            <div style="display:flex;gap:8px;justify-content:center;margin-top:14px">
+                <div class="tool-btn" style="font-size:12px;padding:7px 14px">↺ Play Again</div>
+                <div class="tool-btn" style="font-size:12px;padding:7px 14px">🏠 Home</div>
+            </div>
+        </div>
+    </div>`;
+}
+
+const AL_SCRAMBLED = ["orange", "apple", "grape", "banana"];
+const AL_CORRECT = ["apple", "banana", "grape", "orange"];
+
+function alphaZone(n, word = "", correct = false, filled = false) {
+    const bg = correct ? "#dce8d5" : filled ? "#edf5e8" : "#fbf7ec";
+    const bc = correct ? "#87a47a" : filled ? "#87a47a" : "#d8c9a8";
+    const bs = correct || filled ? "solid" : "dashed";
+    return `<div class="alpha-zone${correct ? " correct" : filled ? " filled" : ""}" style="background:${bg};border-color:${bc};border-style:${bs}">
+        <div class="alpha-zone-n">${n}</div>
+        <div class="alpha-zone-w">${word || '<span style="color:#486657;font-style:italic;font-size:12px">Drop here</span>'}</div>
+        ${correct ? `<span class="alpha-check" style="opacity:1">✅</span>` : filled ? `<button style="background:#f6ddd8;border:1.5px solid #c56558;border-radius:50%;width:20px;height:20px;font-size:11px;font-weight:700;color:#7c2e25;cursor:pointer;padding:0;margin-left:auto" id="rm${n}">×</button>` : ""}
+    </div>`;
+}
+
+function buildAL1(container) {
+    container.innerHTML = `
+        <div class="demo-scene" style="width:100%;max-width:340px">
+            <div class="demo-screen">
+                ${topbar("🔤 Alphabetical Order", "Round 1 / 10")}
+                <div class="demo-content">
+                    <div style="font-size:11px;font-weight:700;color:#486657;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Word Cards</div>
+                    <div class="alpha-pool" style="margin-bottom:12px">
+                        ${AL_SCRAMBLED.map((w) => `<div class="alpha-chip">${w}</div>`).join("")}
+                    </div>
+                    <div style="font-size:11px;font-weight:700;color:#486657;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Drop Zones</div>
+                    <div class="alpha-zones">
+                        ${[1, 2, 3, 4].map((n) => alphaZone(n)).join("")}
+                    </div>
+                </div>
+            </div>
+        </div>`;
+    return null;
+}
+
+function buildAL2(container) {
+    container.innerHTML = `
+        <div class="demo-scene" style="width:100%;max-width:340px">
+            <div class="demo-screen">
+                ${topbar("🔤 Alphabetical Order")}
+                <div class="demo-content">
+                    <div class="alpha-pool" id="al2-pool"></div>
+                    <div class="alpha-zones" id="al2-zones"></div>
+                    <div id="al2-msg" style="font-size:11px;font-weight:700;color:#486657;margin-top:8px;text-align:center;min-height:14px"></div>
+                </div>
+            </div>
+        </div>`;
+
+    const pool = document.getElementById("al2-pool");
+    const zones = document.getElementById("al2-zones");
+    AL_SCRAMBLED.forEach((w) => {
+        const chip = document.createElement("div");
+        chip.className = "alpha-chip";
+        chip.id = `al2c-${w}`;
+        chip.textContent = w;
+        pool.appendChild(chip);
+    });
+    for (let n = 1; n <= 4; n += 1) {
+        const zone = document.createElement("div");
+        zone.className = "alpha-zone";
+        zone.id = `al2z-${n}`;
+        zone.innerHTML = `<div class="alpha-zone-n">${n}</div><div class="alpha-zone-w" id="al2zw-${n}" style="color:#486657;font-style:italic;font-size:12px">Drop here</div>`;
+        zones.appendChild(zone);
+    }
+
+    const timers = [];
+    function doPass() {
+        AL_SCRAMBLED.forEach((w) => {
+            const c = document.getElementById(`al2c-${w}`);
+            if (c) {
+                c.classList.remove("placed", "lifted");
+                c.style.display = "";
+            }
+        });
+        for (let n = 1; n <= 4; n += 1) {
+            const z = document.getElementById(`al2z-${n}`);
+            const w = document.getElementById(`al2zw-${n}`);
+            if (z) {
+                z.className = "alpha-zone";
+                z.style.background = "";
+                z.style.borderColor = "";
+                z.style.borderStyle = "";
+            }
+            if (w) {
+                w.textContent = "Drop here";
+                w.style.color = "#486657";
+                w.style.fontStyle = "italic";
+                w.style.fontSize = "12px";
+            }
+            const rm = z ? z.querySelector(".remove-btn-demo") : null;
+            if (rm) rm.remove();
+        }
+
+        const msg = document.getElementById("al2-msg");
+        if (msg) msg.textContent = "";
+
+        AL_CORRECT.slice(0, 2).forEach((word, idx) => {
+            const chip = document.getElementById(`al2c-${word}`);
+            const zoneZ = document.getElementById(`al2z-${idx + 1}`);
+            const zoneW = document.getElementById(`al2zw-${idx + 1}`);
+            if (!chip || !zoneZ) return;
+
+            timers.push(setTimeout(() => {
+                chip.classList.add("lifted");
+                const p = centre(chip);
+                moveCursor(p.x, p.y, null, 0);
+            }, idx * 1200 + 300));
+
+            timers.push(setTimeout(() => {
+                const p = centre(zoneZ);
+                moveCursor(p.x, p.y, null, 0);
+                clickAt(p.x, p.y, 0, () => {
+                    chip.classList.add("placed");
+                    zoneZ.className = "alpha-zone filled";
+                    zoneZ.style.background = "#edf5e8";
+                    zoneZ.style.borderColor = "#87a47a";
+                    zoneZ.style.borderStyle = "solid";
+                    if (zoneW) {
+                        zoneW.textContent = word;
+                        zoneW.style.color = "#1f3b2d";
+                        zoneW.style.fontStyle = "normal";
+                        zoneW.style.fontSize = "13px";
+                    }
+                    const rm = document.createElement("button");
+                    rm.className = "remove-btn-demo";
+                    rm.style.cssText = "background:#f6ddd8;border:1.5px solid #c56558;border-radius:50%;width:20px;height:20px;font-size:11px;font-weight:700;color:#7c2e25;cursor:pointer;padding:0;margin-left:auto";
+                    rm.textContent = "×";
+                    zoneZ.appendChild(rm);
+                });
+            }, idx * 1200 + 900));
+        });
+
+        timers.push(setTimeout(() => {
+            if (msg) msg.textContent = "Click × to remove a word and place it again";
+            hideCursor();
+        }, 2800));
+        timers.push(setTimeout(doPass, 5600));
+    }
+
+    timers.push(setTimeout(doPass, 300));
+    return () => {
+        timers.forEach(clearTimeout);
+        hideCursor();
+    };
+}
+
+function buildAL3(container) {
+    container.innerHTML = `
+        <div class="demo-scene" style="display:flex;flex-direction:column;gap:10px;width:100%;max-width:380px">
+            <div class="demo-screen">
+                <div class="demo-topbar" style="background:#3f6b43"><span class="demo-topbar-title">✅ Correct Order — All zones turn green</span></div>
+                <div class="demo-content">
+                    <div class="alpha-zones">
+                        ${AL_CORRECT.map((w, i) => alphaZone(i + 1, w, true)).join("")}
+                    </div>
+                </div>
+            </div>
+            <div class="demo-screen">
+                <div class="demo-topbar" style="background:#7c2e25"><span class="demo-topbar-title">❌ Wrong order — Not quite panel appears</span></div>
+                <div class="demo-content">
+                    <div class="alpha-zones" style="margin-bottom:8px" id="al3-bad-zones"></div>
+                    <div id="al3-modal" style="background:#efe7d1;border:2px solid #c56558;border-radius:10px;padding:10px 12px;display:none">
+                        <div style="font-size:18px;margin-bottom:3px">✗</div>
+                        <div style="font-family:inherit;font-size:13px;font-weight:700;color:#7c2e25;margin-bottom:3px">Not quite!</div>
+                        <div id="al3-wrong-msg" style="font-size:11px;color:#486657;margin-bottom:8px"></div>
+                        <div style="display:flex;gap:6px">
+                            <div class="tool-btn" style="font-size:11px;padding:5px 10px">Try Again</div>
+                            <div class="tool-btn" style="font-size:11px;padding:5px 10px">Show Hint</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>`;
+
+    const badZones = document.getElementById("al3-bad-zones");
+    const wrongOrder = ["banana", "apple", "orange", "grape"];
+    wrongOrder.forEach((w, i) => {
+        badZones.innerHTML += alphaZone(i + 1, w, false, true);
+    });
+
+    const timers = [];
+    function animWrong() {
+        const modalEl = document.getElementById("al3-modal");
+        const wmsg = document.getElementById("al3-wrong-msg");
+        if (!modalEl) return;
+        modalEl.style.display = "none";
+        timers.push(setTimeout(() => {
+            modalEl.style.display = "block";
+            if (wmsg) wmsg.textContent = "banana should come before orange in position 1.";
+        }, 800));
+        timers.push(setTimeout(() => {
+            modalEl.style.display = "none";
+        }, 3200));
+        timers.push(setTimeout(animWrong, 5000));
+    }
+
+    timers.push(setTimeout(animWrong, 400));
+    return () => timers.forEach(clearTimeout);
+}
+
+function buildAL4(container) {
+    container.innerHTML = `<div class="demo-scene" style="width:100%;max-width:340px">${finalScore("🏅", "🔤 All Rounds Done!", "8 out of 10 correct", "8", "2", `<div class="demo-score-box"><div class="demo-score-val">80%</div><div class="demo-score-lbl">Accuracy</div></div>`)}</div>`;
+    return null;
+}
+
+if (helpBtn) {
+    helpBtn.addEventListener("click", openHelpModal);
+}
+
+if (helpCloseBtn) {
+    helpCloseBtn.addEventListener("click", closeHelpModal);
+}
+
+if (btnPrev) {
+    btnPrev.addEventListener("click", prevTutorialStep);
+}
+
+if (btnNext) {
+    btnNext.addEventListener("click", nextTutorialStep);
+}
+
+if (tutPanel) {
+    tutPanel.addEventListener("click", (event) => {
+        if (event.target === tutPanel) {
+            closeHelpModal();
+        }
+    });
+}
+
+document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && tutPanel && tutPanel.classList.contains("open")) {
+        closeHelpModal();
+    }
+});
 
 // ==================== Start Game ====================
 function startGame() {
