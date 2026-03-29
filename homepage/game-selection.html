@@ -17,7 +17,7 @@
 
     <div class="game-grid">
 
-        <a id="game1Link" href="../game1/missingLetter.html" class="game-card">
+        <a id="game1Link" href="../MissingLetter/missingLetter.html" class="game-card">
             <h2>Missing Letter</h2>
         </a>
 
@@ -74,9 +74,10 @@
         if (game3Link) game3Link.href = `${game3Link.href.split("?")[0]}?${modeParam}`;
     }
 
-    if (isPrintMode && wordSearchCard) {
-        wordSearchCard.href = "../WordSearch/word-search-printable.html?autoprint=0";
-        wordSearchCard.addEventListener("click", (event) => {
+    function attachPrintModeLauncher(linkEl, printableUrl) {
+        if (!linkEl) return;
+        linkEl.href = `${printableUrl}?autoprint=0`;
+        linkEl.addEventListener("click", (event) => {
             event.preventDefault();
             const printFrame = document.createElement("iframe");
             printFrame.style.position = "fixed";
@@ -85,7 +86,7 @@
             printFrame.style.border = "0";
             printFrame.style.opacity = "0";
             printFrame.setAttribute("aria-hidden", "true");
-            printFrame.src = "../WordSearch/word-search-printable.html?autoprint=0";
+            printFrame.src = `${printableUrl}?autoprint=0`;
 
             const cleanup = () => {
                 window.setTimeout(() => {
@@ -100,13 +101,18 @@
                     printFrame.contentWindow.focus();
                     printFrame.contentWindow.print();
                 } catch (error) {
-                    window.open("../WordSearch/word-search-printable.html?autoprint=1", "_blank");
+                    window.open(`${printableUrl}?autoprint=1`, "_blank");
                 }
                 cleanup();
             });
 
             document.body.appendChild(printFrame);
         });
+    }
+
+    if (isPrintMode) {
+        attachPrintModeLauncher(game1Link, "../MissingLetter/missingLetter_printable.html");
+        attachPrintModeLauncher(wordSearchCard, "../WordSearch/word-search-printable.html");
     }
 
     if (mode === "custom" || isPrintMode) {

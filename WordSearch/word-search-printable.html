@@ -6,6 +6,32 @@
   <title>Word Search</title>
   <link rel="stylesheet" href="word-search.css">
   <style>
+    .word-search-page {
+      margin: 0;
+      min-height: 100vh;
+      min-height: 100dvh;
+      background: #fff !important;
+      box-shadow: none !important;
+    }
+
+    .word-search-page .container.word-search-container {
+      height: auto;
+      min-height: 100vh;
+      min-height: 100dvh;
+      padding: 18px;
+      overflow: visible;
+    }
+
+    .word-search-page .title {
+      color: #111;
+      text-shadow: none;
+    }
+
+    .word-search-page .subtitle {
+      color: #333;
+      text-shadow: none;
+    }
+
     .ws-print-container {
       display: flex;
       flex-direction: column;
@@ -17,8 +43,8 @@
 
     .ws-print-board-card,
     .ws-print-wordbank-card {
-      background: #efe7d1;
-      border: 2px solid #c7b58d;
+      background: #fff;
+      border: 2px solid #8b8b8b;
       border-radius: 14px;
       padding: 10px;
       box-sizing: border-box;
@@ -38,15 +64,15 @@
 
     .ws-print-note {
       margin: 0;
-      color: #486657;
+      color: #303030;
       text-align: left;
       font-size: 14px;
     }
 
     .ws-print-board-shell {
-      border: 2px solid #d8c9a8;
+      border: 2px solid #a0a0a0;
       border-radius: 12px;
-      background: #fbf7ec;
+      background: #fff;
       padding: 6px;
       display: flex;
       justify-content: center;
@@ -58,16 +84,16 @@
       grid-template-columns: repeat(12, 1fr);
       width: min(100%, 700px);
       aspect-ratio: 1 / 1;
-      border: 1px solid #d7c8a8;
+      border: 1px solid #9a9a9a;
     }
 
     .ws-print-cell {
-      border: 1px solid #d7c8a8;
+      border: 1px solid #9a9a9a;
       display: flex;
       align-items: center;
       justify-content: center;
-      background: #fffaf0;
-      color: #1f3b2d;
+      background: #fff;
+      color: #111;
       font-weight: 700;
       font-size: clamp(11px, 1.8vw, 23px);
       line-height: 1;
@@ -76,7 +102,7 @@
 
     .ws-print-wordbank-title {
       margin: 0 0 8px;
-      color: #1f3b2d;
+      color: #111;
       font-size: clamp(20px, 2.1vw, 24px);
       text-align: left;
     }
@@ -89,19 +115,49 @@
       grid-template-columns: 1fr 1fr;
       gap: 6px 10px;
       text-align: left;
-      color: #1f3b2d;
+      color: #111;
       font-weight: 700;
       font-size: 14px;
     }
 
     .ws-print-wordbank li {
-      border: 2px solid #dacba9;
-      background: #f7f0dd;
+      border: 2px solid #a0a0a0;
+      background: #fff;
       border-radius: 8px;
       padding: 5px 8px;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+    }
+
+    .ws-print-actions {
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .ws-print-btn {
+      border: 2px solid #6f6f6f;
+      background: #fff;
+      color: #111;
+      border-radius: 10px;
+      padding: 8px 14px;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.4px;
+      line-height: 1;
+      cursor: pointer;
+      box-shadow: 0 2px 0 rgba(0,0,0,.12);
+      transition: background-color 0.15s ease, transform 0.12s ease, box-shadow 0.12s ease;
+    }
+
+    .ws-print-btn:hover {
+      background: #f2f2f2;
+      transform: translateY(-1px);
+    }
+
+    .ws-print-btn:active {
+      transform: translateY(1px);
+      box-shadow: 0 1px 0 rgba(0,0,0,.16);
     }
 
     @media print {
@@ -161,6 +217,10 @@
       .ws-print-cell {
         font-size: 16px;
       }
+
+      .ws-print-actions {
+        display: none !important;
+      }
     }
   </style>
 </head>
@@ -168,9 +228,13 @@
   <div class="container word-search-container">
     <div class="ws-print-container">
       <header class="word-search-heading" style="text-align:left;">
-        <h1 class="title">Word Search Printable</h1>
+        <h1 class="title">Word Search</h1>
         <p id="printSubtitle" class="subtitle">Find the hidden words in the grid.</p>
       </header>
+
+      <div class="ws-print-actions">
+        <button id="printableBtn" class="ws-print-btn" type="button">Print</button>
+      </div>
 
       <aside class="ws-print-wordbank-card" aria-label="Word bank">
         <h2 class="ws-print-wordbank-title">Words to Find</h2>
@@ -204,6 +268,7 @@
       const boardEl = document.getElementById("printBoard");
       const wordBankEl = document.getElementById("printWordBank");
       const printSubtitle = document.getElementById("printSubtitle");
+      const printableBtn = document.getElementById("printableBtn");
       const dataSource = window.wordLibraryData || { baseLibraries: [] };
       const params = new URLSearchParams(window.location.search);
       const shouldAutoPrint = params.get("autoprint") !== "0";
@@ -371,6 +436,7 @@
       printSubtitle.textContent = `Find the hidden words from "${selectedList.title || "Word List"}".`;
       renderBoard(board);
       renderWordBank(puzzleWords);
+      printableBtn.addEventListener("click", () => window.print());
 
       if (shouldAutoPrint) {
         window.setTimeout(() => {
