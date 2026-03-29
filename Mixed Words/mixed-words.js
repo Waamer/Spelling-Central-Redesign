@@ -11,6 +11,7 @@
     score: 0,
     answeredCurrent: false,
     gameFinished: false,
+    dragIndex: null
   };
 
   const tilesEl = document.getElementById('tiles');
@@ -33,7 +34,8 @@
   const gameCompleteModal = document.getElementById('gameCompleteModal');
   const gameCompleteMessage = document.getElementById('gameCompleteMessage');
   const gameCompleteScoreValue = document.getElementById('gameCompleteScoreValue');
-  const gameCompleteRoundsValue = document.getElementById('gameCompleteRoundsValue');
+  const gameCompleteTotalValue = document.getElementById('gameCompleteTotalValue');
+  const gameCompleteAccuracyValue = document.getElementById('gameCompleteAccuracyValue');
   const playAgainBtn = document.getElementById('playAgainBtn');
 
   const mwTutStepLabel = document.getElementById('mwTutStepLabel');
@@ -51,6 +53,7 @@
   let tutorialStep = 0;
   let tutorialCleanup = null;
   let cursorTimers = [];
+  let touchDragging = false;
 
   const TUTORIAL_STEPS = [
     {
@@ -60,17 +63,17 @@
     },
     {
       title: 'Select & Move Tiles',
-      body: 'Click a tile to select it — it highlights in gold. Use the "← Left" and "→ Right" buttons (or keyboard arrow keys) to slide the selected tile to its correct position.',
+      body: 'Click a tile to select it — it highlights in gold. You can drag tiles on touch screens, or use the arrow buttons and keyboard arrows.',
       build: buildMW2
     },
     {
       title: 'Check Word',
-      body: 'Press "Check Word" when the tiles look right. Correct — a green message confirms and the next word loads. Wrong — a red message shows what you guessed. Try moving tiles again.',
+      body: 'Press "Check Word" when the tiles look right. Wrong answers shake red. Correct answers turn green and load the next word.',
       build: buildMW3
     },
     {
       title: 'Score & Results',
-      body: 'Work through all words. Use "Reshuffle" if you get stuck. Press "Finish" at any time to end. Your final score shows correct words out of total attempted.',
+      body: 'Work through all 6 words. Press "Finish Game" at any time to end. Accuracy is based on correct answers out of 6 total questions.',
       build: buildMW4
     }
   ];
@@ -116,8 +119,9 @@
     const currentWord = getCurrentWord() || '';
     targetLengthEl.textContent = `${currentWord.length} ${currentWord.length === 1 ? 'letter' : 'letters'}`;
 
-    const progress = ((state.currentIndex + (state.gameFinished ? 1 : 0)) / state.words.length) * 100;
-    progressBarEl.style.width = `${Math.max(8, progress)}%`;
+    const total = state.words.length;
+    const progress = total === 0 ? 0 : ((state.currentIndex + (state.gameFinished ? 1 : 0)) / total) * 100;
+    progressBarEl.style.width = `${Math.max(8, Math.min(progress, 100))}%`;
   }
 
   function updateButtons() {
@@ -125,9 +129,32 @@
 
     moveLeftBtn.disabled = !canMove || state.selectedIndex === 0;
     moveRightBtn.disabled = !canMove || state.selectedIndex === state.currentLetters.length - 1;
-    nextWordBtn.disabled = state.gameFinished;
+    nextWordBtn.disabled = state.gameFinished || state.answeredCurrent;
     clearSelectionBtn.disabled = state.selectedIndex === null;
     shuffleBtn.disabled = state.gameFinished;
+  }
+
+  function reorderArray(fromIndex, toIndex) {
+    if (fromIndex === toIndex) return;
+    const moved = state.currentLetters.splice(fromIndex, 1)[0];
+    state.currentLetters.splice(toIndex, 0, moved);
+  }
+
+  function handleDrop(fromIndex, toIndex) {
+    if (state.gameFinished || fromIndex === null || toIndex === null) return;
+    reorderArray(fromIndex, toIndex);
+    state.selectedIndex = toIndex;
+    state.dragIndex = null;
+    setFeedback('Tile moved.', 'idle');
+    render();
+  }
+
+  function getTileIndexFromPoint(x, y) {
+    const element = document.elementFromPoint(x, y);
+    if (!element) return null;
+    const tile = element.closest('.word-card');
+    if (!tile) return null;
+    return Number(tile.dataset.index);
   }
 
   function renderTiles() {
@@ -136,6 +163,9 @@
     state.currentLetters.forEach((letter, index) => {
       const button = document.createElement('button');
       button.className = 'word-card';
+      button.type = 'button';
+      button.draggable = true;
+      button.dataset.index = String(index);
 
       if (index === state.selectedIndex) {
         button.classList.add('selected');
@@ -143,13 +173,58 @@
 
       button.textContent = letter.toUpperCase();
       button.setAttribute('aria-label', `Letter ${letter}, position ${index + 1}`);
-      button.type = 'button';
 
       button.addEventListener('click', () => {
-        if (state.gameFinished) return;
+        if (state.gameFinished || touchDragging) return;
         state.selectedIndex = index;
-        setFeedback(`Selected "${letter.toUpperCase()}". Use arrows to move it.`, 'idle');
+        setFeedback(`Selected "${letter.toUpperCase()}". Use arrows or drag to move it.`, 'idle');
         render();
+      });
+
+      button.addEventListener('dragstart', () => {
+        state.dragIndex = index;
+        state.selectedIndex = index;
+        button.classList.add('dragging');
+      });
+
+      button.addEventListener('dragend', () => {
+        button.classList.remove('dragging');
+        state.dragIndex = null;
+      });
+
+      button.addEventListener('dragover', (event) => {
+        event.preventDefault();
+      });
+
+      button.addEventListener('drop', (event) => {
+        event.preventDefault();
+        if (state.dragIndex === null) return;
+        handleDrop(state.dragIndex, index);
+      });
+
+      button.addEventListener('touchstart', () => {
+        if (state.gameFinished) return;
+        state.dragIndex = index;
+        state.selectedIndex = index;
+        touchDragging = false;
+      }, { passive: true });
+
+      button.addEventListener('touchmove', (event) => {
+        if (state.dragIndex === null || state.gameFinished) return;
+        touchDragging = true;
+        const touch = event.touches[0];
+        const targetIndex = getTileIndexFromPoint(touch.clientX, touch.clientY);
+
+        if (targetIndex !== null && targetIndex !== state.dragIndex) {
+          handleDrop(state.dragIndex, targetIndex);
+        }
+      }, { passive: true });
+
+      button.addEventListener('touchend', () => {
+        state.dragIndex = null;
+        setTimeout(() => {
+          touchDragging = false;
+        }, 0);
       });
 
       tilesEl.appendChild(button);
@@ -167,6 +242,7 @@
     state.currentLetters = shuffleWord(word);
     state.selectedIndex = null;
     state.answeredCurrent = false;
+    state.dragIndex = null;
     setFeedback('Pick a tile to start.', 'idle');
     render();
   }
@@ -190,17 +266,16 @@
   }
 
   function checkWord() {
-    if (state.gameFinished) return;
+    if (state.gameFinished || state.answeredCurrent) return;
 
     const guess = state.currentLetters.join('');
     const answer = getCurrentWord();
 
     if (guess === answer) {
-      if (!state.answeredCurrent) {
-        state.score += 1;
-        state.answeredCurrent = true;
-      }
+      state.score += 1;
+      state.answeredCurrent = true;
 
+      nextWordBtn.classList.remove('mixed-words-incorrect');
       nextWordBtn.classList.add('mixed-words-correct');
       window.setTimeout(() => {
         nextWordBtn.classList.remove('mixed-words-correct');
@@ -218,12 +293,14 @@
         }
       }, 900);
     } else {
+      nextWordBtn.classList.remove('mixed-words-correct');
       nextWordBtn.classList.add('mixed-words-incorrect');
       window.setTimeout(() => {
         nextWordBtn.classList.remove('mixed-words-incorrect');
       }, 320);
 
       setFeedback(`Not quite. You made "${guess.toUpperCase()}". Try again.`, 'error');
+      render();
     }
   }
 
@@ -241,14 +318,24 @@
     render();
   }
 
-  function showCompletionModal() {
-    gameCompleteScoreValue.textContent = String(state.score);
-    gameCompleteRoundsValue.textContent = String(state.words.length);
+  function getAccuracy() {
+    const total = state.words.length;
+    if (total === 0) return 0;
+    return Math.round((state.score / total) * 100);
+  }
 
-    if (state.score === state.words.length) {
-      gameCompleteMessage.textContent = `Amazing — you solved all ${state.words.length} words.`;
+  function showCompletionModal() {
+    const total = state.words.length;
+    const accuracy = getAccuracy();
+
+    gameCompleteScoreValue.textContent = String(state.score);
+    gameCompleteTotalValue.textContent = String(total);
+    gameCompleteAccuracyValue.textContent = `${accuracy}%`;
+
+    if (state.score === total) {
+      gameCompleteMessage.textContent = `Amazing — you solved all ${total} words.`;
     } else {
-      gameCompleteMessage.textContent = `You solved ${state.score} out of ${state.words.length} words.`;
+      gameCompleteMessage.textContent = `You solved ${state.score} out of ${total} words.`;
     }
 
     gameCompleteModal.classList.remove('hidden');
@@ -274,12 +361,10 @@
     state.selectedIndex = null;
     state.answeredCurrent = false;
     state.gameFinished = false;
+    state.dragIndex = null;
     loadWord(0);
   }
 
-  /* =========================
-     Tutorial engine
-  ========================= */
   function hideCursor() {
     cursorTimers.forEach(clearTimeout);
     cursorTimers = [];
@@ -325,9 +410,7 @@
     if (tutorialCleanup) {
       try {
         tutorialCleanup();
-      } catch (error) {
-        /* ignore */
-      }
+      } catch (error) {}
       tutorialCleanup = null;
     }
     hideCursor();
@@ -351,13 +434,11 @@
       .join('');
 
     mwTutPrevBtn.disabled = tutorialStep === 0;
-    mwTutNextBtn.textContent = tutorialStep === total - 1 ? '✓ Done' : 'Next →';
+    mwTutNextBtn.textContent = tutorialStep === TUTORIAL_STEPS.length - 1 ? '✓ Done' : 'Next →';
 
     mwTutDemo.innerHTML = '';
     const cleanup = step.build(mwTutDemo);
-    if (typeof cleanup === 'function') {
-      tutorialCleanup = cleanup;
-    }
+    if (typeof cleanup === 'function') tutorialCleanup = cleanup;
 
     mwTutDots.querySelectorAll('.mw-tut-dot').forEach((dot) => {
       dot.addEventListener('click', () => {
@@ -379,15 +460,7 @@
     mwTutDemo.innerHTML = '';
   }
 
-  /* =========================
-     Tutorial demos
-  ========================= */
-  const MW_WORD = 'APPLE';
   const MW_SCRAMBLE = ['P', 'L', 'A', 'P', 'E'];
-
-  function mwTile(letter, idx, selected = false, gone = false) {
-    return `<div class="alpha-chip" id="mwt${idx}" style="${gone ? 'opacity:.2;' : ''}${selected ? 'outline:3px solid var(--gold);outline-offset:2px;' : ''}font-size:18px;padding:8px 12px;min-width:36px;text-align:center">${letter}</div>`;
-  }
 
   function buildMW1(container) {
     container.innerHTML = `
@@ -405,14 +478,13 @@
               <div style="height:100%;width:8%;background:linear-gradient(90deg,var(--gold-light),var(--gold));border-radius:99px"></div>
             </div>
             <div style="display:flex;gap:8px;justify-content:center;margin-bottom:12px">
-              ${MW_SCRAMBLE.map((l, i) => mwTile(l, i)).join('')}
+              ${MW_SCRAMBLE.map((l) => `<div class="alpha-chip" style="font-size:18px;padding:8px 12px;min-width:36px;text-align:center">${l}</div>`).join('')}
             </div>
             <div class="mw-demo-msg">Arrange the letters to spell the correct word.</div>
           </div>
         </div>
       </div>
     `;
-    return null;
   }
 
   function buildMW2(container) {
@@ -445,7 +517,7 @@
       if (!tilesWrap) return;
 
       tilesWrap.innerHTML = letters.map((l, i) =>
-        `<div class="alpha-chip" id="mw2t${i}" style="font-size:18px;padding:8px 12px;min-width:36px;text-align:center;${selIdx === i ? 'outline:3px solid var(--gold);outline-offset:2px;' : ''}">${l}</div>`
+        `<div class="alpha-chip" style="font-size:18px;padding:8px 12px;min-width:36px;text-align:center;${selIdx === i ? 'outline:3px solid var(--gold);outline-offset:2px;' : ''}">${l}</div>`
       ).join('');
 
       if (leftBtn) leftBtn.style.opacity = (selIdx !== null && selIdx > 0) ? '1' : '.35';
@@ -461,16 +533,16 @@
       if (fb) fb.textContent = 'Pick a tile to start.';
 
       timers.push(setTimeout(() => {
-        const el = document.getElementById('mw2t0');
-        if (!el) return;
-        const p = centre(el);
+        const first = document.querySelector('#mw2-tiles .alpha-chip');
+        if (!first) return;
+        const p = centre(first);
         moveCursor(p.x, p.y, null, 0);
       }, 500));
 
       timers.push(setTimeout(() => {
-        const el = document.getElementById('mw2t0');
-        if (!el) return;
-        const p = centre(el);
+        const first = document.querySelector('#mw2-tiles .alpha-chip');
+        if (!first) return;
+        const p = centre(first);
         clickAt(p.x, p.y, 0, () => {
           selIdx = 0;
           renderMW2();
@@ -552,10 +624,9 @@
           </div>
           <div class="mw-demo-content">
             <div class="mw-demo-tiles" id="mw3-bad-tiles"></div>
-            <div id="mw3-fb" class="mw-demo-msg" style="color:var(--red-text)">Not quite. You made "LAPPE". Try again.</div>
+            <div class="mw-demo-msg" style="color:var(--red-text)">Not quite. You made "LAPPE". Try again.</div>
             <div class="mw-demo-btn-row">
               <div class="tool-btn" id="mw3-check" style="font-size:11px;padding:6px 10px;background:linear-gradient(180deg,var(--gold-light),var(--gold));border-color:#b07e10">Check Word</div>
-              <div class="tool-btn" style="font-size:11px;padding:6px 10px">Reshuffle</div>
             </div>
           </div>
         </div>
@@ -576,9 +647,6 @@
     function animCheck() {
       const btn = document.getElementById('mw3-check');
       if (!btn) return;
-
-      btn.style.background = 'linear-gradient(180deg,var(--gold-light),var(--gold))';
-      btn.style.borderColor = '#b07e10';
 
       timers.push(setTimeout(() => {
         const p = centre(btn);
@@ -622,29 +690,25 @@
           <div class="mw-demo-content">
             <div class="mw-score-row">
               <div class="mw-score-box">
-                <div class="mw-score-val">5</div>
+                <div class="mw-score-val">1</div>
                 <div class="mw-score-lbl">Correct</div>
               </div>
               <div class="mw-score-box">
-                <div class="mw-score-val">1</div>
-                <div class="mw-score-lbl">Wrong</div>
+                <div class="mw-score-val">6</div>
+                <div class="mw-score-lbl">Total</div>
               </div>
               <div class="mw-score-box">
-                <div class="mw-score-val">83%</div>
+                <div class="mw-score-val">17%</div>
                 <div class="mw-score-lbl">Accuracy</div>
               </div>
             </div>
-            <div class="mw-demo-msg">Use Play Again or Game Selection to continue.</div>
+            <div class="mw-demo-msg">Accuracy is based on correct answers out of 6 total words.</div>
           </div>
         </div>
       </div>
     `;
-    return null;
   }
 
-  /* =========================
-     Events
-  ========================= */
   moveLeftBtn.addEventListener('click', () => moveSelected('left'));
   moveRightBtn.addEventListener('click', () => moveSelected('right'));
   nextWordBtn.addEventListener('click', checkWord);

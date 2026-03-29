@@ -1,30 +1,32 @@
-/* =========================
-   Base / page shell
-========================= */
 .mixed-words-page {
     font-family: Arial, sans-serif;
     text-align: center;
     --frame-inner: 14px;
     --frame-outer: 22px;
-    --board-bg: #2f6b3f;
+
     --panel-bg: #efe7d1;
     --panel-border: #c7b58d;
     --panel-shell: #fbf7ec;
     --shell-border: #d8c9a8;
+
     --text-dark: #1f3b2d;
     --text-muted: #486657;
     --text-light: #f4f4ea;
     --text-light2: #dde3d9;
+
     --gold: #d79c1f;
     --gold-light: #f2bb4f;
     --gold-bg: #fff3d9;
     --gold-border: #c9861f;
+
     --green-found: #dce8d5;
     --green-border: #87a47a;
     --green-text: #3f6b43;
+
     --red-bg: #f6ddd8;
     --red-border: #c56558;
     --red-text: #7c2e25;
+
     margin: 0;
     min-height: 100vh;
     min-height: 100dvh;
@@ -33,16 +35,10 @@
     background:
         radial-gradient(circle at 22% 18%, rgba(255,255,255,0.08), transparent 40%),
         radial-gradient(circle at 80% 85%, rgba(255,255,255,0.05), transparent 36%),
-        var(--board-bg);
+        #2f6b3f;
     box-shadow:
         inset 0 0 0 var(--frame-inner) #8a5a31,
         inset 0 0 0 var(--frame-outer) #5f3d20;
-}
-
-*,
-*::before,
-*::after {
-    box-sizing: border-box;
 }
 
 .mixed-words-page .container {
@@ -84,9 +80,6 @@
     display: none !important;
 }
 
-/* =========================
-   Shared buttons / links
-========================= */
 .mixed-words-page .tool-btn {
     border: 2px solid var(--panel-border);
     background: var(--panel-bg);
@@ -124,6 +117,26 @@
     border: 2px solid var(--panel-border);
     cursor: not-allowed;
     box-shadow: none;
+}
+
+.mixed-words-page .tool-btn.mixed-words-incorrect {
+    border-color: var(--red-border);
+    background: var(--red-bg);
+    color: var(--red-text);
+    animation: mixed-words-shake .28s ease;
+}
+
+.mixed-words-page .tool-btn.mixed-words-correct {
+    border-color: #5f9a62;
+    background: #dcefd9;
+    color: #2f6b34;
+}
+
+@keyframes mixed-words-shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-3px); }
+    50% { transform: translateX(3px); }
+    75% { transform: translateX(-2px); }
 }
 
 .mixed-words-page .page-home-btn {
@@ -182,8 +195,7 @@
         background-color 0.15s ease,
         border-color 0.15s ease,
         transform 0.12s ease,
-        box-shadow 0.12s ease,
-        opacity .18s ease;
+        box-shadow 0.12s ease;
 }
 
 .mixed-words-help-btn:hover {
@@ -197,9 +209,6 @@
     box-shadow: 0 1px 0 rgba(0, 0, 0, 0.18);
 }
 
-/* =========================
-   Header
-========================= */
 .mixed-words-header {
     width: min(980px, 100%);
     margin: 0 auto;
@@ -219,7 +228,7 @@
     grid-template-columns: repeat(3, minmax(140px, 1fr));
     gap: 10px;
     align-items: stretch;
-    width: min(520px, 100%);
+    width: min(560px, 100%);
 }
 
 .mixed-words-status-card {
@@ -254,9 +263,6 @@
     overflow-wrap: anywhere;
 }
 
-/* =========================
-   Layout
-========================= */
 .mixed-words-layout {
     flex: 1;
     width: min(980px, 100%);
@@ -369,9 +375,6 @@
     text-align: left;
 }
 
-/* =========================
-   Tiles
-========================= */
 .word-cards-container {
     display: flex;
     flex-wrap: wrap;
@@ -394,8 +397,9 @@
     color: var(--text-dark);
     font-weight: 800;
     font-size: 30px;
-    cursor: pointer;
-    transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease;
+    cursor: grab;
+    touch-action: none;
+    transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease, opacity 0.12s ease;
     user-select: none;
 }
 
@@ -411,14 +415,28 @@
     box-shadow: 0 4px 0 rgba(0,0,0,0.16);
 }
 
-/* =========================
-   Actions
-========================= */
+.word-card.dragging {
+    opacity: 0.7;
+    cursor: grabbing;
+}
+
 .game-actions {
     display: flex;
     justify-content: center;
     gap: 8px;
     flex-wrap: wrap;
+}
+
+.controls-row .tool-btn {
+    min-width: 130px;
+}
+
+.single-action-row .tool-btn {
+    min-width: 220px;
+}
+
+.bottom-actions-row .tool-btn {
+    min-width: 160px;
 }
 
 .mixed-words-primary {
@@ -431,31 +449,6 @@
     background: #f6c969;
 }
 
-/* Check Word feedback states */
-.mixed-words-page .tool-btn.mixed-words-incorrect {
-    border-color: var(--red-border);
-    background: var(--red-bg);
-    color: var(--red-text);
-    animation: mixed-words-shake .28s ease;
-}
-
-.mixed-words-page .tool-btn.mixed-words-correct {
-    border-color: #5f9a62;
-    background: #dcefd9;
-    color: #2f6b34;
-    animation: mixed-words-shake .28s ease;
-}
-
-@keyframes mixed-words-shake {
-    0%, 100% { transform: translateX(0); }
-    25% { transform: translateX(-3px); }
-    50% { transform: translateX(3px); }
-    75% { transform: translateX(-2px); }
-}
-
-/* =========================
-   Finish modal
-========================= */
 .mixed-words-modal {
     position: fixed;
     inset: 0;
@@ -472,7 +465,7 @@
 }
 
 .mixed-words-modal-panel {
-    width: min(460px, 100%);
+    width: min(520px, 100%);
     background: var(--panel-bg);
     border: 2px solid var(--panel-border);
     border-radius: 16px;
@@ -482,7 +475,7 @@
 }
 
 .mixed-words-results-panel {
-    max-width: 420px;
+    max-width: 480px;
     text-align: center;
     padding: 22px 18px 18px;
 }
@@ -551,9 +544,6 @@
     box-sizing: border-box;
 }
 
-/* =========================
-   Help modal
-========================= */
 .mixed-words-help-modal {
     position: fixed;
     inset: 0;
@@ -602,17 +592,11 @@
     padding: 0;
     display: grid;
     place-items: center;
-    transition: background-color .15s ease, border-color .15s ease, transform .12s ease;
 }
 
 .mixed-words-help-close:hover {
     background: var(--gold-bg);
     border-color: var(--gold-border);
-    transform: translateY(-1px);
-}
-
-.mixed-words-help-close:active {
-    transform: translateY(1px);
 }
 
 .mw-tut-header {
@@ -627,7 +611,6 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    min-width: 0;
 }
 
 .mw-tut-header-icon {
@@ -678,7 +661,6 @@
     width: 0%;
     height: 100%;
     background: linear-gradient(90deg, var(--gold-light), var(--gold));
-    border-radius: 999px;
     transition: width .3s ease;
 }
 
@@ -777,13 +759,6 @@
     transform: scale(1.28);
 }
 
-.mw-tut-dot:hover {
-    background: rgba(31, 59, 45, 0.3);
-}
-
-/* =========================
-   Tutorial demo
-========================= */
 .mw-demo-scene {
     width: 100%;
     max-width: 430px;
@@ -835,6 +810,19 @@
     justify-content: center;
     gap: 8px;
     margin-bottom: 12px;
+    flex-wrap: wrap;
+}
+
+.alpha-chip {
+    min-width: 36px;
+    border-radius: 9px;
+    background: linear-gradient(180deg, #fff9eb, #eadcc0);
+    border: 2px solid var(--panel-border);
+    color: var(--text-dark);
+    font-weight: 800;
+    display: grid;
+    place-items: center;
+    box-shadow: 0 3px 0 rgba(0,0,0,.12);
 }
 
 .mw-demo-btn-row {
@@ -850,6 +838,7 @@
     font-size: 12px;
     font-weight: 700;
     color: var(--text-muted);
+    min-height: 16px;
 }
 
 .mw-result-card {
@@ -886,22 +875,6 @@
     font-weight: 700;
 }
 
-/* Shared demo chips */
-.alpha-chip {
-    font-size: 14px;
-    font-weight: 700;
-    padding: 7px 14px;
-    border-radius: 9px;
-    background: var(--gold-bg);
-    border: 2px solid var(--gold-border);
-    color: var(--text-dark);
-    box-shadow: 0 3px 0 var(--gold-border);
-    transition: all .2s;
-}
-
-/* =========================
-   Fake cursor
-========================= */
 .fake-cursor {
     position: fixed;
     pointer-events: none;
@@ -931,13 +904,10 @@
 }
 
 @keyframes clickRipple {
-    0%   { transform: translate(-50%,-50%) scale(0); opacity: 1; }
+    0% { transform: translate(-50%,-50%) scale(0); opacity: 1; }
     100% { transform: translate(-50%,-50%) scale(1.8); opacity: 0; }
 }
 
-/* =========================
-   Responsive
-========================= */
 @media (max-width: 900px) {
     .mixed-words-header {
         flex-direction: column;
@@ -1016,6 +986,19 @@
         flex-wrap: wrap;
         justify-content: center;
     }
+
+    .single-action-row .tool-btn,
+    .bottom-actions-row .tool-btn,
+    .controls-row .tool-btn {
+        min-width: 0;
+        width: 100%;
+    }
+
+    .controls-row,
+    .bottom-actions-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+    }
 }
 
 @media (max-width: 520px) {
@@ -1025,6 +1008,11 @@
             "status"
             "score"
             "round";
+    }
+
+    .controls-row,
+    .bottom-actions-row {
+        grid-template-columns: 1fr;
     }
 }
 
