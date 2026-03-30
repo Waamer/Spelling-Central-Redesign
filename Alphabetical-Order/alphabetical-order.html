@@ -18,7 +18,7 @@
     <h1 class="title">Alphabetical Order</h1>
 
     <!-- Start Screen -->
-    <div id="startScreen" class="start-screen">
+    <div id="startScreen" class="start-screen hidden">
         <div class="game-card-main start-card">
             <h2 class="start-title">Alphabetical Order Game</h2>
             <div class="start-instructions">
@@ -31,7 +31,7 @@
     </div>
 
     <!-- Game Content -->
-    <div id="gameContent" class="game-content hidden">
+    <div id="gameContent" class="game-content">
         
         <!-- Feedback message -->
         <div id="feedback" class="feedback-message"></div>
@@ -179,5 +179,9 @@
 
 <script src="../homepage/word-lists.js"></script>
 <script src="alphabetical-order.js"></script>
+<script>
+    // Auto-start the game when the page loads
+    document.addEventListener('DOMContentLoaded', startGame);
+</script>
 </body>
 </html>
