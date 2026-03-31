@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Select a Game</title>
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body class="game-page">
+<a href="index.html" class="page-home-btn">← HOMEPAGE</a>
+
+<div class="container">
+
+    <h1 class="title">Choose a Game</h1>
+    <p id="selectedListInfo" class="selected-list-info hidden" title="Double-click to preview">
+    </p>
+
+    <div class="game-grid">
+
+        <a id="game1Link" href="../MissingLetter/missingLetter.html" class="game-card">
+            <h2>Missing Letter</h2>
+        </a>
+
+        <a id="game2Link" href="../Alphabetical-Order/alphabetical-order.html" class="game-card">
+            <h2>Alphabetical Order</h2>
+        </a>
+
+        <a id="game3Link" href="../Mixed Words/mixed-words.html" class="game-card">
+            <h2>Mixed Words</h2>
+        </a>
+
+        <a id="wordSearchCard" href="../WordSearch/word-search.html" class="game-card">
+            <h2>Word Search</h2>
+        </a>
+
+    </div>
+
+</div>
+
+<div id="fullListModal" class="import-modal hidden" role="dialog" aria-modal="true" aria-labelledby="fullListTitle">
+    <div class="import-panel full-list-panel">
+        <div class="panel-header">
+            <h3 id="fullListTitle" class="import-title">Full Word List</h3>
+            <button id="closeFullListBtn" class="tool-btn" type="button">Close</button>
+        </div>
+        <p id="fullListCount" class="panel-muted" style="margin: 6px 0 10px;">Word count: 0</p>
+        <div class="word-preview full-list-preview" aria-label="All words in selected list">
+            <ul id="fullListWords" class="word-preview-inner"></ul>
+        </div>
+    </div>
+</div>
+
+<script src="word-lists.js"></script>
+<script>
+    const infoEl = document.getElementById("selectedListInfo");
+    const game1Link = document.getElementById("game1Link");
+    const game2Link = document.getElementById("game2Link");
+    const game3Link = document.getElementById("game3Link");
+    const wordSearchCard = document.getElementById("wordSearchCard");
+    const fullListModal = document.getElementById("fullListModal");
+    const fullListTitle = document.getElementById("fullListTitle");
+    const fullListCount = document.getElementById("fullListCount");
+    const fullListWords = document.getElementById("fullListWords");
+    const closeFullListBtn = document.getElementById("closeFullListBtn");
+    const params = new URLSearchParams(window.location.search);
+    const mode = params.get("mode");
+    const isPrintMode = mode === "print" || mode === "printable";
+    let selectedList = null;
+
+    if (mode) {
+        const modeParam = `mode=${encodeURIComponent(mode)}`;
+        if (game1Link) game1Link.href = `${game1Link.href.split("?")[0]}?${modeParam}`;
+        if (game2Link) game2Link.href = `${game2Link.href.split("?")[0]}?${modeParam}`;
+        if (game3Link) game3Link.href = `${game3Link.href.split("?")[0]}?${modeParam}`;
+    }
+
+    function attachPrintModeLauncher(linkEl, printableUrl) {
+        if (!linkEl) return;
+        linkEl.href = `${printableUrl}?autoprint=0`;
+        linkEl.addEventListener("click", (event) => {
+            event.preventDefault();
+            const printFrame = document.createElement("iframe");
+            printFrame.style.position = "fixed";
+            printFrame.style.width = "0";
+            printFrame.style.height = "0";
+            printFrame.style.border = "0";
+            printFrame.style.opacity = "0";
+            printFrame.setAttribute("aria-hidden", "true");
+            printFrame.src = `${printableUrl}?autoprint=0`;
+
+            const cleanup = () => {
+                window.setTimeout(() => {
+                    if (printFrame.parentNode) {
+                        printFrame.parentNode.removeChild(printFrame);
+                    }
+                }, 1200);
+            };
+
+            printFrame.addEventListener("load", () => {
+                try {
+                    printFrame.contentWindow.focus();
+                    printFrame.contentWindow.print();
+                } catch (error) {
+                    window.open(`${printableUrl}?autoprint=1`, "_blank");
+                }
+                cleanup();
+            });
+
+            document.body.appendChild(printFrame);
+        });
+    }
+
+    if (isPrintMode) {
+        attachPrintModeLauncher(game1Link, "../MissingLetter/missingLetter_printable.html");
+        attachPrintModeLauncher(game2Link, "../Alphabetical-Order/alphabetical-order_printable.html");
+        attachPrintModeLauncher(game3Link, "../Mixed Words/mixed-words_printable.html");
+        attachPrintModeLauncher(wordSearchCard, "../WordSearch/word-search-printable.html");
+    }
+
+    if (mode === "custom" || isPrintMode) {
+        try {
+            selectedList = JSON.parse(localStorage.getItem("spellingcentral_selected_list") || "null");
+        } catch (error) {
+            selectedList = null;
+        }
+    }
+
+    function openFullListModal(list) {
+        if (!list) return;
+        fullListTitle.textContent = list.title || "Word List";
+        const words = Array.isArray(list.words) ? list.words : [];
+        fullListCount.textContent = `Word count: ${words.length}`;
+        fullListWords.innerHTML = "";
+        words.forEach((word) => {
+            const li = document.createElement("li");
+            li.textContent = word;
+            fullListWords.appendChild(li);
+        });
+        fullListModal.classList.remove("hidden");
+    }
+
+    function closeFullListModal() {
+        fullListModal.classList.add("hidden");
+        fullListWords.innerHTML = "";
+    }
+
+    if ((mode === "custom" || isPrintMode) && selectedList) {
+        const listTitle = selectedList.title || "Custom List";
+        infoEl.textContent = isPrintMode
+            ? `PRINT MODE | Selected list: ${listTitle}`
+            : `Selected list: ${listTitle}`;
+        infoEl.classList.remove("hidden");
+        infoEl.addEventListener("click", () => openFullListModal(selectedList));
+    } else {
+        infoEl.classList.add("hidden");
+    }
+
+    closeFullListBtn.addEventListener("click", closeFullListModal);
+    fullListModal.addEventListener("click", (event) => {
+        if (event.target === fullListModal) closeFullListModal();
+    });
+    document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && !fullListModal.classList.contains("hidden")) {
+            closeFullListModal();
+        }
+    });
+</script>
+
+</body>
+</html>

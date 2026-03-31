@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Missing Letters Game</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="game-page">
+
+<button id="helpBtn" class="missing-letter-help-btn" type="button" aria-label="Open tutorial">?</button>
+
+<div class="container">
+
+    <!-- Title -->
+    <h1 class="title">Missing Letters</h1>
+
+    <!-- HOME BUTTON -->
+    
+    <a href="../homepage/game-selection.html" class="secondary-button home-button">← GAME SELECTION</a>
+
+    <!-- Centered game -->
+    <div id="gameContent" class="game-content">
+        
+        <!-- Feedback message -->
+    <div id="feedback" class="feedback-message"></div>
+
+        <div class="game-card-main">
+
+            <div class="game-header">
+                <div class="score">
+                    Score: <span id="score">0</span> / <span id="total">0</span>
+                </div>
+                <button class="hint-button" id="hintBtn" onclick="useHint()" title="Get a hint">💡</button>
+            </div>
+
+            <div id="word" class="word"></div>
+
+            <div id="options" class="options"></div>
+
+            <div class="game-actions">
+                <button class="secondary-button" onclick="nextWord()">Skip</button>
+                <button class="primary-button" onclick="checkAnswer()">Submit</button>
+                <button class="secondary-button" onclick="endGame()">End Game</button>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- Help Tutorial Panel -->
+<div id="tut-panel" class="tut-panel" role="dialog" aria-modal="true" aria-labelledby="tut-title">
+    <div class="tut-shell" role="document">
+        <div class="tut-header">
+            <button id="helpCloseBtn" class="tool-btn tut-back-btn" type="button">&larr; Back</button>
+            <div class="tut-header-center">
+                <span id="tut-icon" class="tut-icon">🧩</span>
+                <span id="tut-title" class="tut-title">Missing Letters</span>
+            </div>
+            <div class="tut-prog-wrap">
+                <span id="tut-step-label" class="tut-step-label"></span>
+                <div class="tut-prog-bar"><div id="tut-prog-fill" class="tut-prog-fill"></div></div>
+            </div>
+        </div>
+
+        <div class="tut-body">
+            <div class="tut-explain" id="tut-explain">
+                <div class="step-num-wrap">
+                    <span class="step-num" id="step-num">1</span>
+                    <span class="step-of" id="step-of">of 4</span>
+                </div>
+                <h2 class="step-title" id="step-title"></h2>
+                <p class="step-body" id="step-body"></p>
+            </div>
+            <div class="tut-demo" id="tut-demo"></div>
+        </div>
+
+        <div class="tut-footer">
+            <button class="tool-btn" id="btn-prev" type="button" disabled>&larr; Previous</button>
+            <div class="tut-dots" id="tut-dots"></div>
+            <button class="tool-btn tut-next-btn" id="btn-next" type="button">Next &rarr;</button>
+        </div>
+    </div>
+</div>
+
+<!-- Fake Cursor -->
+<div id="cursor" class="fake-cursor" aria-hidden="true">
+    <svg width="22" height="26" viewBox="0 0 22 26" fill="none">
+        <path d="M1 1L1 20L5.5 15.5L8.5 22L11 21L8 14.5L14.5 14.5L1 1Z" fill="white" stroke="#1f3b2d" stroke-width="1.5"/>
+    </svg>
+</div>
+
+<!-- Modal -->
+<div id="modal" class="modal">
+    <div class="modal-content endgame-content">
+        <div class="demo-screen endgame-card">
+            <div class="demo-topbar">
+                <span class="demo-topbar-title">🧩 Game Summary</span>
+                <span class="demo-topbar-stat">Final</span>
+            </div>
+            <div class="demo-content endgame-body">
+                <div class="endgame-hero">🏅</div>
+                <div id="finalScoreText" class="endgame-subtitle">0 out of 0 correct</div>
+
+                <div class="demo-score">
+                    <div class="demo-score-box">
+                        <div id="finalCorrect" class="demo-score-val" style="color:#3f6b43">0</div>
+                        <div class="demo-score-lbl">Correct</div>
+                    </div>
+                    <div class="demo-score-box">
+                        <div id="finalWrong" class="demo-score-val" style="color:#7c2e25">0</div>
+                        <div class="demo-score-lbl">Wrong</div>
+                    </div>
+                    <div class="demo-score-box">
+                        <div id="finalAccuracy" class="demo-score-val">0%</div>
+                        <div class="demo-score-lbl">Accuracy</div>
+                    </div>
+                </div>
+
+                <p id="finalMessage" class="endgame-message"></p>
+
+                <div class="endgame-actions">
+                    <button class="primary-button" onclick="restart()">Play Again</button>
+                    <a href="../homepage/game-selection.html" class="secondary-button">← GAME SELECTION</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
