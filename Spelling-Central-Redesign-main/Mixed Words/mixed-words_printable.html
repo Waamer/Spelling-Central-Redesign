@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mixed Words Printable</title>
+  <style>
+    :root {
+      --ink: #111;
+      --muted: #444;
+      --line: #a0a0a0;
+    }
+
+    body {
+      margin: 0;
+      background: #f5f5f5;
+      color: var(--ink);
+      font-family: Arial, sans-serif;
+    }
+
+    .sheet {
+      box-sizing: border-box;
+      width: min(920px, 100%);
+      margin: 16px auto;
+      padding: 18px;
+      background: #fff;
+      border: 1px solid #ddd;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 30px;
+      letter-spacing: 0.2px;
+    }
+
+    .subtitle {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
+    .instructions {
+      margin: 14px 0 12px;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fafafa;
+      font-size: 14px;
+    }
+
+    .questions {
+      margin: 0;
+      padding-left: 24px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .question-item {
+      border-bottom: 1px dashed #d2d2d2;
+      padding: 8px 0;
+      line-height: 1.5;
+    }
+
+    .question-row {
+      display: flex;
+      align-items: baseline;
+      flex-wrap: wrap;
+      gap: 8px 12px;
+    }
+
+    .answer-line {
+      display: inline-block;
+      border-bottom: 2px solid #222;
+      min-width: 120px;
+      height: 28px;
+      letter-spacing: 6px;
+    }
+
+    .scrambled {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: 6px;
+      color: #1f1f1f;
+      word-break: break-word;
+    }
+
+    .answer-key {
+      margin-top: 14px;
+      padding-top: 10px;
+      border-top: 1px solid var(--line);
+      font-size: 13px;
+    }
+
+    .answer-key h2 {
+      margin: 0 0 6px;
+      font-size: 16px;
+    }
+
+    .answer-list {
+      margin: 0;
+      padding-left: 18px;
+      columns: 2;
+    }
+
+    .screen-actions {
+      margin-top: 12px;
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .btn {
+      border: 2px solid #6f6f6f;
+      background: #fff;
+      color: #111;
+      border-radius: 10px;
+      padding: 8px 14px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    @media print {
+      @page {
+        size: auto;
+        margin: 10mm;
+      }
+
+      body {
+        background: #fff;
+      }
+
+      .sheet {
+        width: 100%;
+        margin: 0;
+        border: 0;
+        padding: 0;
+      }
+
+      .screen-actions {
+        display: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="sheet">
+    <h1>Mixed Words</h1>
+    <p id="sheetSubtitle" class="subtitle">Unscramble the letters to make correct words.</p>
+
+    <section class="instructions" aria-label="Instructions">
+      Rearrange the scrambled letters to form the correct spelling word. Write your answer on the line.
+    </section>
+
+    <ol id="questionList" class="questions"></ol>
+
+    <section class="answer-key" aria-label="Answer key">
+      <h2>Answer Key</h2>
+      <ol id="answerList" class="answer-list"></ol>
+    </section>
+
+    <div class="screen-actions">
+      <button id="printBtn" class="btn" type="button">Print</button>
+    </div>
+  </main>
+
+  <script src="../word-lists.js"></script>
+  <script>
+    (function () {
+      "use strict";
+
+      const DEFAULT_WORDS = ["apple", "planet", "school", "garden", "pencil", "rabbit"];
+      const questionList = document.getElementById("questionList");
+      const answerList = document.getElementById("answerList");
+      const subtitle = document.getElementById("sheetSubtitle");
+      const printBtn = document.getElementById("printBtn");
+      const params = new URLSearchParams(window.location.search);
+      const autoPrint = params.get("autoprint") === "1";
+
+      function normalizeWord(word) {
+        return String(word || "")
+          .trim()
+          .replace(/[^a-zA-Z]/g, "")
+          .toLowerCase();
+      }
+
+      function shuffle(array) {
+        const copy = [...array];
+        for (let i = copy.length - 1; i > 0; i -= 1) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [copy[i], copy[j]] = [copy[j], copy[i]];
+        }
+        return copy;
+      }
+
+      function scrambleWord(word) {
+        if (word.length < 2) return word.toUpperCase();
+        let chars = word.toUpperCase().split("");
+        let attempts = 0;
+        do {
+          chars = shuffle(chars);
+          attempts += 1;
+        } while (chars.join("").toLowerCase() === word.toLowerCase() && attempts < 12);
+        return chars.join(" ");
+      }
+
+      function dedupe(words) {
+        const out = [];
+        const seen = new Set();
+        words.forEach((w) => {
+          if (!w || seen.has(w)) return;
+          seen.add(w);
+          out.push(w);
+        });
+        return out;
+      }
+
+      function readSelectedWords() {
+        try {
+          const selected = JSON.parse(localStorage.getItem("spellingcentral_selected_list") || "null");
+          if (selected && Array.isArray(selected.words) && selected.words.length) {
+            return {
+              title: selected.title || "Selected List",
+              words: dedupe(
+                selected.words
+                  .map(normalizeWord)
+                  .filter((w) => w.length >= 3 && w.length <= 12)
+              )
+            };
+          }
+        } catch (error) {
+          // ignore parse errors
+        }
+
+        const base = Array.isArray(window.wordLibraryData?.baseLibraries)
+          ? window.wordLibraryData.baseLibraries
+          : [];
+        if (base.length) {
+          const picked = base[Math.floor(Math.random() * base.length)];
+          return {
+            title: picked.title || "Word List",
+            words: dedupe(
+              (Array.isArray(picked.words) ? picked.words : [])
+                .map(normalizeWord)
+                .filter((w) => w.length >= 3 && w.length <= 12)
+            )
+          };
+        }
+
+        return { title: "Fallback", words: DEFAULT_WORDS };
+      }
+
+      function renderWorksheet() {
+        const source = readSelectedWords();
+        const words = source.words.length ? source.words : DEFAULT_WORDS;
+        const quizWords = words.map((w) => w.toUpperCase());
+
+        subtitle.textContent = `Word list: ${source.title}`;
+        questionList.innerHTML = "";
+        answerList.innerHTML = "";
+
+        quizWords.forEach((word) => {
+          const li = document.createElement("li");
+          li.className = "question-item";
+          li.innerHTML = `
+            <div class="question-row">
+              <span class="answer-line" style="width:${Math.max(120, word.length * 20)}px"></span>
+              <span class="scrambled">${scrambleWord(word)}</span>
+            </div>
+          `;
+          questionList.appendChild(li);
+
+          const answerLi = document.createElement("li");
+          answerLi.textContent = word;
+          answerList.appendChild(answerLi);
+        });
+      }
+
+      renderWorksheet();
+      printBtn.addEventListener("click", () => window.print());
+      if (autoPrint) {
+        window.setTimeout(() => window.print(), 180);
+      }
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Missing Letter Printable</title>
+  <style>
+    :root {
+      --paper-bg: #fff;
+      --ink: #1d1d1d;
+      --muted: #4a4a4a;
+      --line: #b8b8b8;
+      --accent: #2f6b3f;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      color: var(--ink);
+      background: #f3f3f3;
+    }
+
+    .sheet {
+      box-sizing: border-box;
+      width: min(920px, 100%);
+      margin: 16px auto;
+      padding: 18px;
+      background: var(--paper-bg);
+      border: 1px solid #ddd;
+    }
+
+    .header h1 {
+      margin: 0;
+      font-size: 30px;
+      color: var(--accent);
+      letter-spacing: 0.2px;
+    }
+
+    .header p {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
+    .instructions {
+      margin: 14px 0 12px;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fafafa;
+      font-size: 14px;
+    }
+
+    .questions {
+      margin: 0;
+      padding-left: 24px;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+
+    .question-item {
+      padding: 8px 0;
+      border-bottom: 1px dashed #d5d5d5;
+    }
+
+    .prompt {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      margin: 0 0 8px;
+      line-height: 1.35;
+      word-break: break-word;
+    }
+
+    .blank {
+      display: inline-block;
+      min-width: 28px;
+      text-align: center;
+      border-bottom: 2px solid #2a2a2a;
+      color: transparent;
+      margin: 0 2px;
+      transform: translateY(-2px);
+    }
+
+    .choices {
+      font-size: 14px;
+      color: var(--muted);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .choice-chip {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 2px 8px;
+      background: #fff;
+      color: #2b2b2b;
+      font-weight: 700;
+      letter-spacing: 0.4px;
+    }
+
+    .answer-key {
+      margin-top: 14px;
+      padding-top: 10px;
+      border-top: 1px solid var(--line);
+      font-size: 13px;
+      color: #333;
+    }
+
+    .answer-key h2 {
+      margin: 0 0 6px;
+      font-size: 16px;
+      color: #222;
+    }
+
+    .answer-list {
+      margin: 0;
+      padding-left: 18px;
+      columns: 2;
+    }
+
+    .screen-actions {
+      margin-top: 12px;
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .btn {
+      border: 1px solid #b3b3b3;
+      background: #fff;
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    @media print {
+      @page {
+        size: auto;
+        margin: 10mm;
+      }
+
+      body {
+        background: #fff;
+      }
+
+      .sheet {
+        margin: 0;
+        width: 100%;
+        border: 0;
+        padding: 0;
+      }
+
+      .screen-actions {
+        display: none !important;
+      }
+
+      .questions {
+        gap: 8px;
+      }
+
+      .prompt {
+        font-size: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="sheet">
+    <header class="header">
+      <h1>Missing Letters</h1>
+      <p id="sheetSubtitle">Complete each word by filling in the missing letters.</p>
+    </header>
+
+    <section class="instructions" aria-label="Instructions">
+      Fill in the blanks to complete each word. Use the letter choices under each word as hints.
+    </section>
+
+    <ol id="questionList" class="questions"></ol>
+
+    <section class="answer-key" aria-label="Answer key">
+      <h2>Answer Key</h2>
+      <ol id="answerList" class="answer-list"></ol>
+    </section>
+
+    <div class="screen-actions">
+      <button id="printBtn" class="btn" type="button">Print</button>
+    </div>
+  </main>
+
+  <script src="../word-lists.js"></script>
+  <script>
+    (function () {
+      "use strict";
+
+      const MAX_QUESTIONS = 10;
+      const FALLBACK_WORDS = ["APPLE", "PLANET", "SCHOOL", "GARDEN", "PENCIL", "RABBIT", "OCEAN", "WINDOW"];
+      const questionList = document.getElementById("questionList");
+      const answerList = document.getElementById("answerList");
+      const subtitle = document.getElementById("sheetSubtitle");
+      const printBtn = document.getElementById("printBtn");
+      const params = new URLSearchParams(window.location.search);
+      const autoPrint = params.get("autoprint") === "1";
+
+      function shuffle(array) {
+        const copy = [...array];
+        for (let i = copy.length - 1; i > 0; i -= 1) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [copy[i], copy[j]] = [copy[j], copy[i]];
+        }
+        return copy;
+      }
+
+      function normalizeWord(word) {
+        return String(word || "").trim().replace(/[^a-zA-Z]/g, "").toUpperCase();
+      }
+
+      function readSelectedList() {
+        try {
+          const selected = JSON.parse(localStorage.getItem("spellingcentral_selected_list") || "null");
+          if (selected && Array.isArray(selected.words) && selected.words.length) return selected;
+        } catch (error) {
+          // ignore parse issue and use fallback
+        }
+
+        const base = Array.isArray(window.wordLibraryData?.baseLibraries) ? window.wordLibraryData.baseLibraries : [];
+        if (base.length) return base[Math.floor(Math.random() * base.length)];
+        return { title: "Fallback List", difficulty: "medium", words: FALLBACK_WORDS };
+      }
+
+      function getMissingCount(wordLength, difficulty) {
+        const mode = String(difficulty || "medium").toLowerCase();
+        if (mode === "easy") return Math.max(1, Math.floor(wordLength * 0.25));
+        if (mode === "hard") return Math.max(2, Math.ceil(wordLength * 0.5));
+        return Math.max(2, Math.ceil(wordLength * 0.35));
+      }
+
+      function getRandomLetter(excludeSet) {
+        const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        for (let i = 0; i < 52; i += 1) {
+          const letter = letters[Math.floor(Math.random() * letters.length)];
+          if (!excludeSet.has(letter)) return letter;
+        }
+        return "Z";
+      }
+
+      function buildPrompt(word, missingIndexes) {
+        const indexSet = new Set(missingIndexes);
+        return word
+          .split("")
+          .map((ch, i) => (indexSet.has(i) ? '<span class="blank">_</span>' : ch))
+          .join("");
+      }
+
+      function pickMissingIndexes(word, count) {
+        const candidates = Array.from({ length: word.length }, (_, i) => i);
+        return shuffle(candidates).slice(0, Math.min(count, Math.max(1, word.length - 1))).sort((a, b) => a - b);
+      }
+
+      function createQuestionData(word, difficulty) {
+        const missingIndexes = pickMissingIndexes(word, getMissingCount(word.length, difficulty));
+        const missingLetters = missingIndexes.map((idx) => word[idx]);
+        const uniqueMissing = [...new Set(missingLetters)];
+        const choiceSet = new Set(uniqueMissing);
+        while (choiceSet.size < Math.max(4, uniqueMissing.length + 2)) {
+          choiceSet.add(getRandomLetter(choiceSet));
+        }
+        return {
+          word,
+          promptHtml: buildPrompt(word, missingIndexes),
+          choices: shuffle([...choiceSet])
+        };
+      }
+
+      function renderWorksheet(list) {
+        const rawWords = Array.isArray(list.words) ? list.words : [];
+        const cleaned = rawWords
+          .map(normalizeWord)
+          .filter((w) => w.length >= 4 && w.length <= 12);
+
+        const deduped = [];
+        const seen = new Set();
+        cleaned.forEach((word) => {
+          if (!seen.has(word)) {
+            seen.add(word);
+            deduped.push(word);
+          }
+        });
+
+        const selectedWords = (deduped.length ? shuffle(deduped) : FALLBACK_WORDS).slice(0, MAX_QUESTIONS);
+        const difficulty = list.difficulty || "medium";
+        const data = selectedWords.map((word) => createQuestionData(word, difficulty));
+
+        subtitle.textContent = `Word list: ${list.title || "Custom List"} | Difficulty: ${String(difficulty).toUpperCase()}`;
+
+        questionList.innerHTML = "";
+        answerList.innerHTML = "";
+
+        data.forEach((item, idx) => {
+          const li = document.createElement("li");
+          li.className = "question-item";
+          li.innerHTML = `
+            <p class="prompt">${item.promptHtml}</p>
+            <div class="choices">
+              <span>Choices:</span>
+              ${item.choices.map((ch) => `<span class="choice-chip">${ch}</span>`).join("")}
+            </div>
+          `;
+          questionList.appendChild(li);
+
+          const answerLi = document.createElement("li");
+          answerLi.textContent = item.word;
+          answerList.appendChild(answerLi);
+        });
+      }
+
+      const selectedList = readSelectedList();
+      renderWorksheet(selectedList);
+
+      printBtn.addEventListener("click", () => window.print());
+      if (autoPrint) {
+        window.setTimeout(() => window.print(), 180);
+      }
+    })();
+  </script>
+</body>
+</html>

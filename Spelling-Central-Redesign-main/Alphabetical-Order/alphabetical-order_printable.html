@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Alphabetical Order Printable</title>
+  <style>
+    :root {
+      --ink: #111;
+      --muted: #444;
+      --line: #a8a8a8;
+    }
+
+    body {
+      margin: 0;
+      background: #f5f5f5;
+      color: var(--ink);
+      font-family: Arial, sans-serif;
+    }
+
+    .sheet {
+      box-sizing: border-box;
+      width: min(980px, 100%);
+      margin: 16px auto;
+      padding: 18px;
+      background: #fff;
+      border: 1px solid #ddd;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 30px;
+    }
+
+    .subtitle {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
+    .instructions {
+      margin: 14px 0 12px;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fafafa;
+      font-size: 14px;
+    }
+
+    .questions {
+      margin: 0;
+      padding-left: 24px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .question-item {
+      border-bottom: 1px dashed #d2d2d2;
+      padding: 8px 0;
+    }
+
+    .question-line {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+      line-height: 1.65;
+      word-break: break-word;
+    }
+
+    .blank {
+      display: inline-block;
+      min-width: 68px;
+      border-bottom: 2px solid #222;
+      text-align: center;
+      transform: translateY(-2px);
+      margin: 0 4px 0 0;
+    }
+
+    .word-group {
+      font-size: 18px;
+      font-weight: 700;
+      margin-left: 8px;
+      letter-spacing: 0.4px;
+    }
+
+    .answer-key {
+      margin-top: 14px;
+      padding-top: 10px;
+      border-top: 1px solid var(--line);
+      font-size: 13px;
+    }
+
+    .answer-key h2 {
+      margin: 0 0 6px;
+      font-size: 16px;
+    }
+
+    .answer-list {
+      margin: 0;
+      padding-left: 18px;
+      columns: 2;
+    }
+
+    .screen-actions {
+      margin-top: 12px;
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .btn {
+      border: 2px solid #6f6f6f;
+      background: #fff;
+      color: #111;
+      border-radius: 10px;
+      padding: 8px 14px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    @media print {
+      @page {
+        size: auto;
+        margin: 10mm;
+      }
+
+      body {
+        background: #fff;
+      }
+
+      .sheet {
+        width: 100%;
+        margin: 0;
+        border: 0;
+        padding: 0;
+      }
+
+      .screen-actions {
+        display: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="sheet">
+    <h1>Alphabetical Order</h1>
+    <p id="sheetSubtitle" class="subtitle">Put each group of words in alphabetical order (A to Z).</p>
+
+    <section class="instructions" aria-label="Instructions">
+      For each line, write the 4 words in A-Z order on the blanks:
+      <strong>1) ___ 2) ___ 3) ___ 4) ___</strong>
+    </section>
+
+    <ol id="questionList" class="questions"></ol>
+
+    <section class="answer-key" aria-label="Answer key">
+      <h2>Answer Key</h2>
+      <ol id="answerList" class="answer-list"></ol>
+    </section>
+
+    <div class="screen-actions">
+      <button id="printBtn" class="btn" type="button">Print</button>
+    </div>
+  </main>
+
+  <script src="../homepage/word-lists.js"></script>
+  <script>
+    (function () {
+      "use strict";
+
+      const QUESTIONS_COUNT = 8;
+      const DEFAULT_WORDS = [
+        "apple", "zebra", "moon", "cat",
+        "book", "train", "cloud", "fish",
+        "garden", "planet", "pencil", "rabbit"
+      ];
+
+      const questionList = document.getElementById("questionList");
+      const answerList = document.getElementById("answerList");
+      const subtitle = document.getElementById("sheetSubtitle");
+      const printBtn = document.getElementById("printBtn");
+      const params = new URLSearchParams(window.location.search);
+      const autoPrint = params.get("autoprint") === "1";
+
+      function normalizeWord(word) {
+        return String(word || "")
+          .trim()
+          .replace(/[^a-zA-Z]/g, "")
+          .toLowerCase();
+      }
+
+      function shuffle(array) {
+        const copy = [...array];
+        for (let i = copy.length - 1; i > 0; i -= 1) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [copy[i], copy[j]] = [copy[j], copy[i]];
+        }
+        return copy;
+      }
+
+      function dedupe(words) {
+        const out = [];
+        const seen = new Set();
+        words.forEach((w) => {
+          if (!w || seen.has(w)) return;
+          seen.add(w);
+          out.push(w);
+        });
+        return out;
+      }
+
+      function readSourceWords() {
+        try {
+          const selected = JSON.parse(localStorage.getItem("spellingcentral_selected_list") || "null");
+          if (selected && Array.isArray(selected.words) && selected.words.length) {
+            const selectedWords = dedupe(
+              selected.words.map(normalizeWord).filter((w) => w.length >= 3 && w.length <= 12)
+            );
+            if (selectedWords.length >= 4) {
+              return { title: selected.title || "Selected List", words: selectedWords };
+            }
+          }
+        } catch (error) {
+          // ignore parse errors and continue
+        }
+
+        const base = Array.isArray(window.wordLibraryData?.baseLibraries) ? window.wordLibraryData.baseLibraries : [];
+        if (base.length) {
+          const picked = base[Math.floor(Math.random() * base.length)];
+          const baseWords = dedupe(
+            (Array.isArray(picked.words) ? picked.words : [])
+              .map(normalizeWord)
+              .filter((w) => w.length >= 3 && w.length <= 12)
+          );
+          if (baseWords.length >= 4) {
+            return { title: picked.title || "Word List", words: baseWords };
+          }
+        }
+
+        return { title: "Fallback", words: dedupe(DEFAULT_WORDS.map(normalizeWord)) };
+      }
+
+      function buildQuestionSets(words) {
+        const pool = shuffle(words);
+        const sets = [];
+        let cursor = 0;
+
+        while (sets.length < QUESTIONS_COUNT) {
+          const set = [];
+          for (let i = 0; i < 4; i += 1) {
+            if (cursor >= pool.length) cursor = 0;
+            set.push(pool[cursor]);
+            cursor += 1;
+          }
+          if (new Set(set).size < 4) {
+            const refill = shuffle(words);
+            for (const word of refill) {
+              if (!set.includes(word)) set.push(word);
+              if (set.length === 4) break;
+            }
+          }
+          sets.push(set.slice(0, 4));
+        }
+        return sets;
+      }
+
+      function render() {
+        const source = readSourceWords();
+        subtitle.textContent = `Word list: ${source.title}`;
+        const sets = buildQuestionSets(source.words);
+
+        questionList.innerHTML = "";
+        answerList.innerHTML = "";
+
+        sets.forEach((words) => {
+          const shuffledWords = shuffle(words).map((w) => w.toLowerCase());
+          const sortedWords = [...words].sort((a, b) => a.localeCompare(b)).map((w) => w.toLowerCase());
+
+          const li = document.createElement("li");
+          li.className = "question-item";
+          li.innerHTML = `
+            <div class="question-line">
+              1) <span class="blank">&nbsp;</span>
+              2) <span class="blank">&nbsp;</span>
+              3) <span class="blank">&nbsp;</span>
+              4) <span class="blank">&nbsp;</span>
+              <span class="word-group">${shuffledWords.join(" / ")}</span>
+            </div>
+          `;
+          questionList.appendChild(li);
+
+          const answerLi = document.createElement("li");
+          answerLi.textContent = sortedWords.join(", ");
+          answerList.appendChild(answerLi);
+        });
+      }
+
+      render();
+      printBtn.addEventListener("click", () => window.print());
+      if (autoPrint) {
+        window.setTimeout(() => window.print(), 180);
+      }
+    })();
+  </script>
+</body>
+</html>

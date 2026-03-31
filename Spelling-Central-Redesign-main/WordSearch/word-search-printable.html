@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Word Search Printable</title>
+  <link rel="stylesheet" href="word-search.css">
+  <style>
+    .word-search-page {
+      margin: 0;
+      min-height: 100vh;
+      min-height: 100dvh;
+      background: #fff !important;
+      box-shadow: none !important;
+    }
+
+    .word-search-page .container.word-search-container {
+      height: auto;
+      min-height: 100vh;
+      min-height: 100dvh;
+      padding: 18px;
+      overflow: visible;
+    }
+
+    .word-search-page .title {
+      color: #111;
+      text-shadow: none;
+    }
+
+    .word-search-page .subtitle {
+      color: #333;
+      text-shadow: none;
+    }
+
+    .ws-print-container {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      width: min(1120px, 100%);
+      margin: 0 auto;
+      min-height: 0;
+    }
+
+    .ws-print-board-card,
+    .ws-print-wordbank-card {
+      background: #fff;
+      border: 2px solid #8b8b8b;
+      border-radius: 14px;
+      padding: 10px;
+      box-sizing: border-box;
+      min-height: 0;
+    }
+
+    .ws-print-board-card {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .ws-print-wordbank-card {
+      width: min(760px, 100%);
+      margin: 0 auto;
+    }
+
+    .ws-print-note {
+      margin: 0;
+      color: #303030;
+      text-align: left;
+      font-size: 14px;
+    }
+
+    .ws-print-board-shell {
+      border: 2px solid #a0a0a0;
+      border-radius: 12px;
+      background: #fff;
+      padding: 6px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .ws-print-board {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      width: min(100%, 700px);
+      aspect-ratio: 1 / 1;
+      border: 1px solid #9a9a9a;
+    }
+
+    .ws-print-cell {
+      border: 1px solid #9a9a9a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #fff;
+      color: #111;
+      font-weight: 700;
+      font-size: clamp(11px, 1.8vw, 23px);
+      line-height: 1;
+      user-select: none;
+    }
+
+    .ws-print-wordbank-title {
+      margin: 0 0 8px;
+      color: #111;
+      font-size: clamp(20px, 2.1vw, 24px);
+      text-align: left;
+    }
+
+    .ws-print-wordbank {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px 10px;
+      text-align: left;
+      color: #111;
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .ws-print-wordbank li {
+      border: 2px solid #a0a0a0;
+      background: #fff;
+      border-radius: 8px;
+      padding: 5px 8px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .ws-print-actions {
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .ws-print-btn {
+      border: 2px solid #6f6f6f;
+      background: #fff;
+      color: #111;
+      border-radius: 10px;
+      padding: 8px 14px;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.4px;
+      line-height: 1;
+      cursor: pointer;
+      box-shadow: 0 2px 0 rgba(0,0,0,.12);
+      transition: background-color 0.15s ease, transform 0.12s ease, box-shadow 0.12s ease;
+    }
+
+    .ws-print-btn:hover {
+      background: #f2f2f2;
+      transform: translateY(-1px);
+    }
+
+    .ws-print-btn:active {
+      transform: translateY(1px);
+      box-shadow: 0 1px 0 rgba(0,0,0,.16);
+    }
+
+    @media print {
+      @page {
+        size: auto;
+        margin: 12mm;
+      }
+
+      .word-search-page {
+        background: #fff !important;
+        box-shadow: none !important;
+        min-height: auto;
+      }
+
+      .word-search-page .container.word-search-container {
+        height: auto;
+        min-height: auto;
+        padding: 0;
+        overflow: visible;
+        gap: 8px;
+      }
+
+      .title,
+      .subtitle {
+        color: #111 !important;
+        text-shadow: none !important;
+      }
+
+      .ws-print-board-card,
+      .ws-print-wordbank-card {
+        background: #fff !important;
+        box-shadow: none !important;
+      }
+
+      .ws-print-container {
+        gap: 8px;
+      }
+
+      .ws-print-wordbank-title {
+        margin-bottom: 6px;
+        font-size: 18px;
+      }
+
+      .ws-print-wordbank {
+        gap: 4px 8px;
+        font-size: 13px;
+      }
+
+      .ws-print-wordbank li {
+        padding: 4px 7px;
+      }
+
+      .ws-print-board {
+        width: min(100%, 620px);
+      }
+
+      .ws-print-cell {
+        font-size: 16px;
+      }
+
+      .ws-print-actions {
+        display: none !important;
+      }
+    }
+  </style>
+</head>
+<body class="word-search-page">
+  <div class="container word-search-container">
+    <div class="ws-print-container">
+      <header class="word-search-heading" style="text-align:left;">
+        <h1 class="title">Word Search</h1>
+        <p id="printSubtitle" class="subtitle">Find the hidden words in the grid.</p>
+      </header>
+
+      <div class="ws-print-actions">
+        <button id="printableBtn" class="ws-print-btn" type="button">Print</button>
+      </div>
+
+      <aside class="ws-print-wordbank-card" aria-label="Word bank">
+        <h2 class="ws-print-wordbank-title">Words to Find</h2>
+        <ul id="printWordBank" class="ws-print-wordbank"></ul>
+      </aside>
+
+      <section aria-label="Printable puzzle page">
+        <div class="ws-print-board-card">
+          <p class="ws-print-note">Circle each word from the list above.</p>
+          <div class="ws-print-board-shell">
+            <div id="printBoard" class="ws-print-board" role="grid" aria-label="Printable word search board"></div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script src="../word-lists.js"></script>
+  <script>
+    (function () {
+      "use strict";
+
+      const GRID_SIZE = 12;
+      const DIRECTIONS = [
+        { dr: 0, dc: 1 },
+        { dr: 1, dc: 0 },
+        { dr: 0, dc: -1 },
+        { dr: -1, dc: 0 }
+      ];
+
+      const boardEl = document.getElementById("printBoard");
+      const wordBankEl = document.getElementById("printWordBank");
+      const printSubtitle = document.getElementById("printSubtitle");
+      const printableBtn = document.getElementById("printableBtn");
+      const dataSource = window.wordLibraryData || { baseLibraries: [] };
+      const params = new URLSearchParams(window.location.search);
+      const shouldAutoPrint = params.get("autoprint") !== "0";
+
+      function shuffle(list) {
+        const copy = [...list];
+        for (let i = copy.length - 1; i > 0; i -= 1) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [copy[i], copy[j]] = [copy[j], copy[i]];
+        }
+        return copy;
+      }
+
+      function normalizeWord(word) {
+        return String(word || "")
+          .trim()
+          .replace(/[^a-zA-Z]/g, "")
+          .toUpperCase();
+      }
+
+      function readSelectedList() {
+        try {
+          const selected = JSON.parse(localStorage.getItem("spellingcentral_selected_list") || "null");
+          if (selected && Array.isArray(selected.words) && selected.words.length) {
+            return selected;
+          }
+        } catch (error) {
+          // ignore parse error and use fallback
+        }
+
+        const base = Array.isArray(dataSource.baseLibraries) ? dataSource.baseLibraries : [];
+        if (!base.length) {
+          return {
+            title: "Fallback List",
+            words: ["apple", "book", "cloud", "pencil", "school", "planet", "garden"]
+          };
+        }
+        return base[Math.floor(Math.random() * base.length)];
+      }
+
+      function choosePuzzleWords(sourceWords) {
+        const cleaned = sourceWords
+          .map(normalizeWord)
+          .filter((word) => word.length >= 3 && word.length <= GRID_SIZE);
+
+        const unique = [];
+        const seen = new Set();
+        cleaned.forEach((word) => {
+          if (seen.has(word)) return;
+          seen.add(word);
+          unique.push(word);
+        });
+
+        const chosen = shuffle(unique).slice(0, 10);
+        if (chosen.length >= 6) return chosen;
+
+        const fallback = ["PUZZLE", "LETTER", "SEARCH", "BOARD", "SCHOOL", "PLANET", "DESIGN"];
+        fallback.forEach((word) => {
+          if (chosen.length < 10 && !chosen.includes(word)) chosen.push(word);
+        });
+        return chosen;
+      }
+
+      function createEmptyBoard() {
+        return Array.from({ length: GRID_SIZE }, () =>
+          Array.from({ length: GRID_SIZE }, () => "")
+        );
+      }
+
+      function canPlaceWord(grid, word, row, col, direction) {
+        for (let i = 0; i < word.length; i += 1) {
+          const r = row + direction.dr * i;
+          const c = col + direction.dc * i;
+          if (r < 0 || r >= GRID_SIZE || c < 0 || c >= GRID_SIZE) return false;
+          const existing = grid[r][c];
+          if (existing && existing !== word[i]) return false;
+        }
+        return true;
+      }
+
+      function placeWord(grid, word) {
+        const shuffledDirections = shuffle(DIRECTIONS);
+        for (let attempt = 0; attempt < 350; attempt += 1) {
+          const direction = shuffledDirections[attempt % shuffledDirections.length];
+          const row = Math.floor(Math.random() * GRID_SIZE);
+          const col = Math.floor(Math.random() * GRID_SIZE);
+
+          if (!canPlaceWord(grid, word, row, col, direction)) continue;
+          for (let i = 0; i < word.length; i += 1) {
+            const r = row + direction.dr * i;
+            const c = col + direction.dc * i;
+            grid[r][c] = word[i];
+          }
+          return true;
+        }
+        return false;
+      }
+
+      function fillBoard(grid) {
+        const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        for (let row = 0; row < GRID_SIZE; row += 1) {
+          for (let col = 0; col < GRID_SIZE; col += 1) {
+            if (!grid[row][col]) {
+              grid[row][col] = letters[Math.floor(Math.random() * letters.length)];
+            }
+          }
+        }
+      }
+
+      function buildPuzzle(words) {
+        let grid = createEmptyBoard();
+        let success = false;
+        const ordered = shuffle(words).sort((a, b) => b.length - a.length);
+
+        for (let tries = 0; tries < 40 && !success; tries += 1) {
+          grid = createEmptyBoard();
+          success = true;
+          for (const word of ordered) {
+            if (!placeWord(grid, word)) {
+              success = false;
+              break;
+            }
+          }
+        }
+
+        if (!success) {
+          grid = createEmptyBoard();
+          ordered.slice(0, 6).forEach((word, index) => {
+            const row = Math.min(index * 2, GRID_SIZE - 1);
+            for (let col = 0; col < word.length && col < GRID_SIZE; col += 1) {
+              grid[row][col] = word[col];
+            }
+          });
+        }
+
+        fillBoard(grid);
+        return grid;
+      }
+
+      function renderBoard(grid) {
+        boardEl.innerHTML = "";
+        for (let row = 0; row < GRID_SIZE; row += 1) {
+          for (let col = 0; col < GRID_SIZE; col += 1) {
+            const cell = document.createElement("div");
+            cell.className = "ws-print-cell";
+            cell.textContent = grid[row][col];
+            boardEl.appendChild(cell);
+          }
+        }
+      }
+
+      function renderWordBank(words) {
+        wordBankEl.innerHTML = "";
+        words.slice().sort((a, b) => a.localeCompare(b)).forEach((word) => {
+          const li = document.createElement("li");
+          li.textContent = word;
+          wordBankEl.appendChild(li);
+        });
+      }
+
+      const selectedList = readSelectedList();
+      const puzzleWords = choosePuzzleWords(selectedList.words || []);
+      const board = buildPuzzle(puzzleWords);
+
+      printSubtitle.textContent = `Find the hidden words from "${selectedList.title || "Word List"}".`;
+      renderBoard(board);
+      renderWordBank(puzzleWords);
+      printableBtn.addEventListener("click", () => window.print());
+
+      if (shouldAutoPrint) {
+        window.setTimeout(() => {
+          window.print();
+        }, 180);
+      }
+    })();
+  </script>
+</body>
+</html>
