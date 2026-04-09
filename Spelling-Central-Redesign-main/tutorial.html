@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Game Tutorials — Spelling Central</title>
+  <link rel="stylesheet" href="tutorial-styles.css">
+</head>
+<body class="tutorial-page">
+
+  <!-- ── LANDING ── -->
+  <div id="landing" class="tut-landing">
+    <div class="container tut-landing-container">
+
+      <h1 class="title">Game Tutorials</h1>
+      <p class="subtitle">Choose a game to watch a step-by-step animated guide</p>
+
+      <div class="game-grid">
+
+        <button class="game-card" onclick="openTutorial('wordsearch')">
+          <span class="gc-icon">🔍</span>
+          <span class="gc-title">Word Search</span>
+          <span class="gc-desc">Find hidden words in a letter grid</span>
+          <span class="gc-cta">Watch Tutorial →</span>
+        </button>
+
+        <button class="game-card" onclick="openTutorial('alphabetical')">
+          <span class="gc-icon">🔤</span>
+          <span class="gc-title">Alphabetical Order</span>
+          <span class="gc-desc">Drag words into A–Z order</span>
+          <span class="gc-cta">Watch Tutorial →</span>
+        </button>
+
+        <button class="game-card" onclick="openTutorial('scramble')">
+          <span class="gc-icon">🔀</span>
+          <span class="gc-title">Word Scramble</span>
+          <span class="gc-desc">Unscramble the mixed-up letters</span>
+          <span class="gc-cta">Watch Tutorial →</span>
+        </button>
+
+        <button class="game-card" onclick="openTutorial('missing')">
+          <span class="gc-icon">🔡</span>
+          <span class="gc-title">Missing Letters</span>
+          <span class="gc-desc">Fill in the blanks to complete words</span>
+          <span class="gc-cta">Watch Tutorial →</span>
+        </button>
+
+      </div>
+
+      <a href="index.html" class="back-link back-button tut-back-home">← Back to Home</a>
+
+    </div>
+  </div>
+
+  <!-- ── TUTORIAL PANEL ── -->
+  <div id="tut-panel" class="tut-panel">
+
+    <div class="tut-header">
+      <button class="tool-btn tut-back-btn" onclick="closeTutorial()">← Back</button>
+      <div class="tut-header-center">
+        <span id="tut-icon" class="tut-icon"></span>
+        <span id="tut-title" class="tut-title"></span>
+      </div>
+      <div class="tut-prog-wrap">
+        <span id="tut-step-label" class="tut-step-label"></span>
+        <div class="tut-prog-bar"><div id="tut-prog-fill" class="tut-prog-fill"></div></div>
+      </div>
+    </div>
+
+    <div class="tut-body">
+      <div class="tut-explain" id="tut-explain">
+        <div class="step-num-wrap">
+          <span class="step-num" id="step-num">1</span>
+          <span class="step-of" id="step-of">of 4</span>
+        </div>
+        <h2 class="step-title" id="step-title"></h2>
+        <p class="step-body" id="step-body"></p>
+      </div>
+      <div class="tut-demo" id="tut-demo"></div>
+    </div>
+
+    <div class="tut-footer">
+      <button class="tool-btn" id="btn-prev" onclick="prevStep()" disabled>← Previous</button>
+      <div class="tut-dots" id="tut-dots"></div>
+      <button class="tool-btn tut-next-btn" id="btn-next" onclick="nextStep()">Next →</button>
+    </div>
+
+  </div>
+
+  <!-- fake cursor -->
+  <div id="cursor" class="fake-cursor">
+    <svg width="22" height="26" viewBox="0 0 22 26" fill="none">
+      <path d="M1 1L1 20L5.5 15.5L8.5 22L11 21L8 14.5L14.5 14.5L1 1Z" fill="white" stroke="#1f3b2d" stroke-width="1.5"/>
+    </svg>
+  </div>
+
+  <script src="tutorial-app.js"></script>
+</body>
+</html>

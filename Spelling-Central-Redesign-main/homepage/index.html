@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Spelling Central Redesign</title>
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body class="home-page">
+
+<div class="container">
+
+    <!--
+    <h1 class="title">Spelling Central</h1>
+    <p class="subtitle">Icon goes here</p>
+    -->
+    <img src="SpellingCentral.png" alt="Spelling Central Logo" class="logo">
+
+    <div class="button-group">
+
+        <a href="game-selection.html?mode=quick" class="primary-button">
+            Quick Play
+        </a>
+        <p class="button-description">
+            Start instantly with the default word list
+        </p>
+
+        <a href="library.html" class="secondary-button">
+            Custom Game
+        </a>
+        <p class="button-description">
+            Choose, manage, and start with word lists
+        </p>
+
+        <a href="library.html?mode=print" class="secondary-button printable-button">
+            Printable Activities
+        </a>
+        <p class="button-description">
+            Generate printable spelling worksheets
+        </p>
+
+    </div>
+
+</div>
+
+<button id="creditsBtn" class="credit-button" type="button" aria-label="Project credits">
+    Credits
+</button>
+
+<div id="creditsModal" class="credits-modal hidden" role="dialog" aria-modal="true" aria-labelledby="creditsTitle">
+    <div class="credits-panel">
+        <div class="credits-header">
+            <h2 id="creditsTitle">Project Credits</h2>
+            <button id="closeCreditsBtn" class="tool-btn" type="button" aria-label="Close credits">X</button>
+        </div>
+        <ul class="credits-list">
+            <li>Word Search - Waleed Aamer</li>
+            <li>Alphabetical Order - Numan Salahuddin</li>
+            <li>Mixed words - Jasleen Bakshi</li>
+            <li>Missing letters - Vaanya Puri</li>
+            <li>Homepage &amp; Printables - Tianyue Fang</li>
+            <li>Word Lists &amp; Tutorial - Ankan Podder</li>
+        </ul>
+    </div>
+</div>
+
+<script>
+    (function () {
+        const creditsBtn = document.getElementById("creditsBtn");
+        const creditsModal = document.getElementById("creditsModal");
+        const closeCreditsBtn = document.getElementById("closeCreditsBtn");
+
+        function openCredits() {
+            creditsModal.classList.remove("hidden");
+        }
+
+        function closeCredits() {
+            creditsModal.classList.add("hidden");
+        }
+
+        creditsBtn.addEventListener("click", openCredits);
+        closeCreditsBtn.addEventListener("click", closeCredits);
+        creditsModal.addEventListener("click", (event) => {
+            if (event.target === creditsModal) closeCredits();
+        });
+        document.addEventListener("keydown", (event) => {
+            if (event.key === "Escape" && !creditsModal.classList.contains("hidden")) {
+                closeCredits();
+            }
+        });
+    })();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Word Library</title>
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body class="library-page">
+<a href="index.html" class="page-home-btn">← HOMEPAGE</a>
+<div class="container">
+
+  <h1 class="title">Select a Word List</h1>
+  <p class="subtitle">Select a list to play with or manage your library</p>
+
+  <div class="library-shell">
+
+    <!-- LEFT: list panel -->
+    <div class="library-left">
+      <div class="library-search-row">
+        <input class="library-search" type="text" placeholder="Search libraries..." aria-label="Search libraries">
+        <select id="libraryFilter" class="library-filter" aria-label="Filter libraries">
+          <option value="all">All</option>
+          <option value="easy">Easy</option>
+          <option value="medium">Medium</option>
+          <option value="hard">Hard</option>
+          <option value="custom">Custom</option>
+          <option value="premade">Premade</option>
+        </select>
+      </div>
+
+      <div class="library-list" role="listbox" aria-label="Library list" id="libraryList"></div>
+    </div>
+
+    <!-- RIGHT: detail panel -->
+<div class="library-right" aria-live="polite">
+
+    <!-- Header row -->
+    <div class="panel-header">
+      <h2 id="listTitle" class="panel-title">Word List</h2>
+    </div>
+  
+    <!-- Tool row: always visible -->
+    <div class="panel-tools">
+      <button id="addBtn" class="tool-btn" type="button">+ Add list</button>
+      <button id="importBtn" class="tool-btn" type="button">Import</button>
+      <button id="exportBtn" class="tool-btn tool-disabled" type="button" disabled>Export</button>
+    </div>
+  
+    <!-- Empty state: shown when nothing selected -->
+    <div id="emptyState" class="library-empty">
+      <div class="library-empty-box">
+        <p class="panel-muted" style="margin:0;">
+          No list selected. Choose a library on the left to preview words.
+        </p>
+      </div>
+    </div>
+  
+    <!-- Detail state: shown when selected -->
+    <div id="detailState" class="library-detail hidden">
+      <p class="panel-muted" style="margin-top: 6px;">
+        Word count: <span id="wordCount">0</span>
+      </p>
+      <p class="panel-muted" style="margin-top: 2px;">
+        Tip: double-click a list on the left to open full list view.
+      </p>
+  
+      <div class="word-preview" aria-label="Word preview (scrollable)">
+        <ul id="wordPreview" class="word-preview-inner"></ul>
+      </div>
+    </div>
+
+    <div class="library-bottom-actions">
+      <button id="playWithListBtn" class="tool-btn tool-disabled play-list-btn" type="button" disabled>
+        play with this list
+      </button>
+    </div>
+
+  </div>
+    </div>
+
+  </div>
+
+<div id="importModal" class="import-modal hidden" role="dialog" aria-modal="true" aria-labelledby="importTitle">
+  <div class="import-panel">
+    <h3 id="importTitle" class="import-title">Import Word List</h3>
+    <p class="import-subtitle">.txt files only. One word per line.</p>
+
+    <div id="dropZone" class="import-dropzone" tabindex="0" role="button" aria-label="Drop txt file here or choose file">
+      <p>Drag and drop a .txt file</p>
+      <p class="import-or">or</p>
+      <button id="chooseFileBtn" class="tool-btn" type="button">Choose File</button>
+      <input id="importFileInput" type="file" accept=".txt,text/plain" class="hidden" />
+    </div>
+
+    <p id="importError" class="import-error hidden"></p>
+
+    <div id="importDetails" class="import-details hidden">
+      <p class="panel-muted" style="margin: 10px 0 8px;">Preview</p>
+      <div class="import-preview">
+        <ul id="importPreviewList"></ul>
+      </div>
+
+      <label class="import-label" for="importListName">List name</label>
+      <input id="importListName" class="library-search import-name-input" type="text" />
+      <p id="nameError" class="import-error hidden"></p>
+    </div>
+
+    <div class="import-actions">
+      <button id="cancelImportBtn" class="tool-btn" type="button">Cancel</button>
+      <button id="confirmImportBtn" class="tool-btn tool-disabled" type="button" disabled>Import List</button>
+    </div>
+  </div>
+</div>
+
+<div id="addModal" class="import-modal hidden" role="dialog" aria-modal="true" aria-labelledby="addTitle">
+  <div class="import-panel add-panel">
+    <div class="panel-header">
+      <h3 id="addTitle" class="import-title">Add Word List</h3>
+      <button id="closeAddBtn" class="tool-btn add-close-btn" type="button" aria-label="Close add list dialog">X</button>
+    </div>
+
+    <label class="import-label" for="addListName">List name</label>
+    <input id="addListName" class="library-search import-name-input" type="text" />
+    <p id="addNameError" class="import-error hidden"></p>
+
+    <div id="addWordsGrid" class="add-words-grid" aria-label="25 word slots"></div>
+    <p id="addPageIndicator" class="panel-muted add-page-indicator">1/1</p>
+    <div class="import-actions add-actions">
+      <div class="add-nav-buttons">
+        <button id="prevPageBtn" class="tool-btn tool-disabled" type="button" disabled>&larr;</button>
+        <button id="nextPageBtn" class="tool-btn tool-disabled" type="button" disabled>&rarr;</button>
+      </div>
+      <button id="confirmAddBtn" class="tool-btn tool-disabled" type="button" disabled>Add List</button>
+    </div>
+  </div>
+</div>
+
+<div id="fullListModal" class="import-modal hidden" role="dialog" aria-modal="true" aria-labelledby="fullListTitle">
+  <div class="import-panel full-list-panel">
+    <div class="panel-header">
+      <h3 id="fullListTitle" class="import-title">Full Word List</h3>
+      <button id="closeFullListBtn" class="tool-btn" type="button">Close</button>
+    </div>
+    <p id="fullListCount" class="panel-muted" style="margin: 6px 0 10px;">Word count: 0</p>
+    <div class="word-preview full-list-preview" aria-label="All words in selected list">
+      <ul id="fullListWords" class="word-preview-inner"></ul>
+    </div>
+  </div>
+</div>
+
+<script src="word-lists.js"></script>
+<script>
+    const libraryListEl = document.getElementById("libraryList");
+    const emptyState = document.getElementById("emptyState");
+    const detailState = document.getElementById("detailState");
+  
+    const listTitle = document.getElementById("listTitle");
+    const wordCount = document.getElementById("wordCount");
+    const wordPreview = document.getElementById("wordPreview");
+    const playWithListBtn = document.getElementById("playWithListBtn");
+  
+    const exportBtn = document.getElementById("exportBtn");
+    const importBtn = document.getElementById("importBtn");
+    const addBtn = document.getElementById("addBtn");
+    const dataSource = window.wordLibraryData || { baseLibraries: [] };
+    const CUSTOM_LISTS_STORAGE_KEY = "spellingcentral_custom_lists";
+    const importModal = document.getElementById("importModal");
+    const dropZone = document.getElementById("dropZone");
+    const chooseFileBtn = document.getElementById("chooseFileBtn");
+    const importFileInput = document.getElementById("importFileInput");
+    const importDetails = document.getElementById("importDetails");
+    const importPreviewList = document.getElementById("importPreviewList");
+    const importListName = document.getElementById("importListName");
+    const cancelImportBtn = document.getElementById("cancelImportBtn");
+    const confirmImportBtn = document.getElementById("confirmImportBtn");
+    const importError = document.getElementById("importError");
+    const nameError = document.getElementById("nameError");
+    const addModal = document.getElementById("addModal");
+    const addListName = document.getElementById("addListName");
+    const addNameError = document.getElementById("addNameError");
+    const addWordsGrid = document.getElementById("addWordsGrid");
+    const addPageIndicator = document.getElementById("addPageIndicator");
+    const closeAddBtn = document.getElementById("closeAddBtn");
+    const prevPageBtn = document.getElementById("prevPageBtn");
+    const nextPageBtn = document.getElementById("nextPageBtn");
+    const confirmAddBtn = document.getElementById("confirmAddBtn");
+    const fullListModal = document.getElementById("fullListModal");
+    const fullListTitle = document.getElementById("fullListTitle");
+    const fullListCount = document.getElementById("fullListCount");
+    const fullListWords = document.getElementById("fullListWords");
+    const closeFullListBtn = document.getElementById("closeFullListBtn");
+    const libraryFilter = document.getElementById("libraryFilter");
+    const pageParams = new URLSearchParams(window.location.search);
+    const pageMode = (pageParams.get("mode") || "").toLowerCase();
+    const isPrintMode = pageMode === "print" || pageMode === "printable";
+    let pendingImportWords = [];
+    let pendingImportHasDuplicates = false;
+    const WORDS_PER_PAGE = 25;
+    const addWordFields = [];
+    let addDuplicateSetCache = new Set();
+    let addPages = [];
+    let addCurrentPageIndex = 0;
+
+    function readStoredCustomLists() {
+      try {
+        const raw = sessionStorage.getItem(CUSTOM_LISTS_STORAGE_KEY);
+        if (!raw) return [];
+        const parsed = JSON.parse(raw);
+        if (!Array.isArray(parsed)) return [];
+        return parsed
+          .filter((item) =>
+            item &&
+            typeof item.id === "string" &&
+            typeof item.title === "string" &&
+            Array.isArray(item.words)
+          )
+          .map((item) => ({
+            id: item.id,
+            title: item.title,
+            words: item.words.map((word) => String(word).trim()).filter(Boolean),
+            favorite: !!item.favorite,
+            category: item.category || "custom",
+            difficulty: item.difficulty || "custom",
+            locked: false
+          }));
+      } catch (error) {
+        return [];
+      }
+    }
+
+    function writeStoredCustomLists() {
+      const customLists = libraries
+        .filter((item) => !item.locked)
+        .map((item) => ({
+          id: item.id,
+          title: item.title,
+          words: item.words,
+          favorite: !!item.favorite,
+          category: item.category || "custom",
+          difficulty: item.difficulty || "custom"
+        }));
+      try {
+        sessionStorage.setItem(CUSTOM_LISTS_STORAGE_KEY, JSON.stringify(customLists));
+      } catch (error) {
+        // Ignore storage write errors in prototype.
+      }
+    }
+
+    const libraries = [
+      ...dataSource.baseLibraries.map((item) => ({ ...item, favorite: false, locked: true })),
+      ...readStoredCustomLists()
+    ];
+
+    let selectedId = null;
+  
+    function disableExport() {
+      // Export disabled (grey)
+      exportBtn.disabled = true;
+      exportBtn.classList.add("tool-disabled");
+      playWithListBtn.disabled = true;
+      playWithListBtn.classList.add("tool-disabled");
+    }
+  
+    function enableExport() {
+      // Export enabled
+      exportBtn.disabled = false;
+      exportBtn.classList.remove("tool-disabled");
+      playWithListBtn.disabled = false;
+      playWithListBtn.classList.remove("tool-disabled");
+    }
+
+    function getFilteredLibraries() {
+      const search = document.querySelector(".library-search");
+      const q = search.value.trim().toLowerCase();
+      const filterValue = libraryFilter.value;
+      const filtered = libraries.filter((lib) => {
+        const matchesQuery = lib.title.toLowerCase().includes(q);
+        if (!matchesQuery) return false;
+        const difficulty = (lib.difficulty || "custom").toLowerCase();
+        if (filterValue === "all") return true;
+        if (filterValue === "custom") return difficulty === "custom";
+        if (filterValue === "premade") return difficulty !== "custom";
+        return difficulty === filterValue;
+      });
+      return filtered.sort((a, b) => {
+        if (!!b.favorite !== !!a.favorite) return b.favorite ? 1 : -1;
+        return a.title.localeCompare(b.title);
+      });
+    }
+
+    function getDisplayTitle(lib) {
+      if (!lib || !lib.title) return "";
+      if (["easy", "medium", "hard"].includes((lib.difficulty || "").toLowerCase())) {
+        return lib.title.replace(/\s*-\s*(easy|medium|hard)\s*$/i, "");
+      }
+      return lib.title;
+    }
+
+    function renderLibraryList() {
+      const visible = getFilteredLibraries();
+      libraryListEl.innerHTML = "";
+
+      visible.forEach((lib) => {
+        const row = document.createElement("div");
+        row.className = "library-item-row";
+
+        const itemBtn = document.createElement("button");
+        itemBtn.className = "library-item";
+        itemBtn.type = "button";
+        itemBtn.dataset.id = lib.id;
+        itemBtn.dataset.title = lib.title;
+        const labelWrap = document.createElement("span");
+        labelWrap.className = "library-item-label-wrap";
+        const label = document.createElement("span");
+        label.className = "library-item-label";
+        label.textContent = getDisplayTitle(lib);
+        labelWrap.appendChild(label);
+        itemBtn.appendChild(labelWrap);
+
+        const difficultyTag = document.createElement("span");
+        const difficulty = (lib.difficulty || "custom").toLowerCase();
+        difficultyTag.className = `difficulty-tag difficulty-${difficulty}`;
+        difficultyTag.textContent = difficulty;
+        itemBtn.appendChild(difficultyTag);
+
+        if (selectedId === lib.id) itemBtn.classList.add("selected");
+
+        itemBtn.addEventListener("click", () => setSelected(lib.id));
+        itemBtn.addEventListener("dblclick", () => openFullListModal(lib));
+        itemBtn.addEventListener("mouseenter", () => {
+          if (label.classList.contains("is-overflowing")) {
+            label.classList.add("is-scrolling");
+          }
+        });
+        itemBtn.addEventListener("mouseleave", () => {
+          label.classList.remove("is-scrolling");
+        });
+
+        const favoriteBtn = document.createElement("button");
+        favoriteBtn.type = "button";
+        favoriteBtn.className = `favorite-btn ${lib.favorite ? "is-favorite" : ""}`;
+        favoriteBtn.setAttribute("aria-label", lib.favorite ? `Unfavorite ${lib.title}` : `Favorite ${lib.title}`);
+        favoriteBtn.textContent = lib.favorite ? "★" : "☆";
+        favoriteBtn.addEventListener("click", (event) => {
+          event.stopPropagation();
+          lib.favorite = !lib.favorite;
+          if (!lib.locked) writeStoredCustomLists();
+          renderLibraryList();
+        });
+
+        const deleteBtn = document.createElement("button");
+        deleteBtn.type = "button";
+        deleteBtn.className = `delete-btn ${lib.locked ? "is-locked" : ""}`;
+        deleteBtn.setAttribute("aria-label", lib.locked ? `${lib.title} cannot be deleted` : `Delete ${lib.title}`);
+        deleteBtn.textContent = "🗑";
+        if (lib.locked) {
+          deleteBtn.disabled = true;
+          deleteBtn.title = "Default lists cannot be deleted";
+        }
+        deleteBtn.addEventListener("click", (event) => {
+          event.stopPropagation();
+          if (lib.locked) return;
+          const firstConfirm = confirm(`Delete "${lib.title}"?`);
+          if (!firstConfirm) return;
+          const secondConfirm = confirm("This action cannot be undone. Delete this list permanently?");
+          if (!secondConfirm) return;
+          const removeIndex = libraries.findIndex((item) => item.id === lib.id);
+          if (removeIndex === -1) return;
+          libraries.splice(removeIndex, 1);
+          writeStoredCustomLists();
+          if (selectedId === lib.id) {
+            setSelected(null);
+          } else {
+            renderLibraryList();
+          }
+        });
+
+        row.appendChild(itemBtn);
+        row.appendChild(favoriteBtn);
+        row.appendChild(deleteBtn);
+        libraryListEl.appendChild(row);
+
+        requestAnimationFrame(() => {
+          const overflowAmount = label.scrollWidth - labelWrap.clientWidth;
+          const isOverflowing = overflowAmount > 6;
+          label.classList.toggle("is-overflowing", isOverflowing);
+          if (isOverflowing) {
+            label.style.setProperty("--scroll-distance", `${overflowAmount}px`);
+            label.style.setProperty("--scroll-duration", `${Math.max(4, overflowAmount / 40)}s`);
+          }
+        });
+      });
+    }
+
+    function openFullListModal(list) {
+      if (!list) return;
+      fullListTitle.textContent = list.title;
+      fullListCount.textContent = `Word count: ${list.words.length}`;
+      fullListWords.innerHTML = "";
+      list.words.forEach((word) => {
+        const li = document.createElement("li");
+        li.textContent = word;
+        fullListWords.appendChild(li);
+      });
+      fullListModal.classList.remove("hidden");
+    }
+
+    function closeFullListModal() {
+      fullListModal.classList.add("hidden");
+      fullListWords.innerHTML = "";
+    }
+
+    function sanitizeWordsFromText(text) {
+      return text
+        .split(/\r?\n/)
+        .map((line) => line.trim())
+        .filter((line) => line.length > 0);
+    }
+
+    function getNextCustomListName() {
+      const used = new Set(
+        libraries.map((lib) => lib.title.trim().toLowerCase())
+      );
+      let i = 1;
+      while (used.has(`custom list ${i}`)) i += 1;
+      return `Custom List ${i}`;
+    }
+
+    function isDuplicateName(name) {
+      const key = name.trim().toLowerCase();
+      return libraries.some((lib) => lib.title.trim().toLowerCase() === key);
+    }
+
+    function getDuplicateSet(words) {
+      const counts = {};
+      words.forEach((word) => {
+        const key = word.trim().toLowerCase();
+        if (!key) return;
+        counts[key] = (counts[key] || 0) + 1;
+      });
+      const duplicates = new Set();
+      Object.entries(counts).forEach(([key, count]) => {
+        if (count > 1) duplicates.add(key);
+      });
+      return duplicates;
+    }
+
+    function setImportError(message) {
+      if (!message) {
+        importError.textContent = "";
+        importError.classList.add("hidden");
+        return;
+      }
+      importError.textContent = message;
+      importError.classList.remove("hidden");
+    }
+
+    function setNameError(message) {
+      if (!message) {
+        nameError.textContent = "";
+        nameError.classList.add("hidden");
+        return;
+      }
+      nameError.textContent = message;
+      nameError.classList.remove("hidden");
+    }
+
+    function setAddNameError(message) {
+      if (!message) {
+        addNameError.textContent = "";
+        addNameError.classList.add("hidden");
+        return;
+      }
+      addNameError.textContent = message;
+      addNameError.classList.remove("hidden");
+    }
+
+    function createEmptyAddPage() {
+      return Array.from({ length: WORDS_PER_PAGE }, () => ({ value: "", touched: false }));
+    }
+
+    function updateAddPageIndicator() {
+      addPageIndicator.textContent = `${addCurrentPageIndex + 1}/${addPages.length}`;
+    }
+
+    function ensureAddWordFields() {
+      if (addWordFields.length) return;
+      for (let i = 0; i < WORDS_PER_PAGE; i += 1) {
+        const slot = document.createElement("div");
+        slot.className = "add-word-slot";
+
+        const input = document.createElement("input");
+        input.type = "text";
+        input.className = "add-word-input";
+        input.placeholder = `Word ${i + 1}`;
+        input.setAttribute("aria-label", `Word ${i + 1}`);
+        input.dataset.slotIndex = String(i);
+
+        const repeatedTag = document.createElement("span");
+        repeatedTag.className = "repeated-tag hidden";
+        repeatedTag.textContent = "repeated!";
+
+        const invalidTag = document.createElement("span");
+        invalidTag.className = "invalid-tag hidden";
+        invalidTag.textContent = "invalid word!";
+
+        input.addEventListener("input", () => {
+          const slotIndex = Number(input.dataset.slotIndex);
+          if (addPages[addCurrentPageIndex] && addPages[addCurrentPageIndex][slotIndex]) {
+            addPages[addCurrentPageIndex][slotIndex].value = input.value;
+          }
+          updateAddButtonsState(false);
+        });
+        input.addEventListener("blur", () => {
+          const slotIndex = Number(input.dataset.slotIndex);
+          if (addPages[addCurrentPageIndex] && addPages[addCurrentPageIndex][slotIndex]) {
+            addPages[addCurrentPageIndex][slotIndex].value = input.value;
+            addPages[addCurrentPageIndex][slotIndex].touched = true;
+          }
+          input.dataset.touched = "true";
+          updateAddButtonsState(true);
+        });
+
+        slot.appendChild(input);
+        slot.appendChild(repeatedTag);
+        slot.appendChild(invalidTag);
+        addWordsGrid.appendChild(slot);
+        addWordFields.push({ input, repeatedTag, invalidTag });
+      }
+    }
+
+    function loadAddPage(pageIndex) {
+      addCurrentPageIndex = pageIndex;
+      if (!addPages[addCurrentPageIndex]) {
+        addPages[addCurrentPageIndex] = createEmptyAddPage();
+      }
+      const page = addPages[addCurrentPageIndex];
+      addWordFields.forEach(({ input, repeatedTag, invalidTag }, idx) => {
+        const entry = page[idx] || { value: "", touched: false };
+        input.value = entry.value;
+        if (entry.touched) input.dataset.touched = "true";
+        else delete input.dataset.touched;
+        input.classList.remove("is-repeated");
+        input.classList.remove("is-invalid");
+        repeatedTag.classList.add("hidden");
+        invalidTag.classList.add("hidden");
+      });
+      updateAddPageIndicator();
+    }
+
+    function closeImportModal() {
+      importModal.classList.add("hidden");
+      setImportError("");
+      setNameError("");
+      dropZone.classList.remove("hidden");
+      importDetails.classList.add("hidden");
+      pendingImportWords = [];
+      pendingImportHasDuplicates = false;
+      importPreviewList.innerHTML = "";
+      importFileInput.value = "";
+      importListName.value = "";
+      confirmImportBtn.disabled = true;
+      confirmImportBtn.classList.add("tool-disabled");
+    }
+
+    function openImportModal() {
+      importModal.classList.remove("hidden");
+      setImportError("");
+      setNameError("");
+      dropZone.classList.remove("hidden");
+      importDetails.classList.add("hidden");
+      pendingImportWords = [];
+      pendingImportHasDuplicates = false;
+      importPreviewList.innerHTML = "";
+      importListName.value = getNextCustomListName();
+      confirmImportBtn.disabled = true;
+      confirmImportBtn.classList.add("tool-disabled");
+    }
+
+    function closeAddModal() {
+      addModal.classList.add("hidden");
+      addListName.value = "";
+      setAddNameError("");
+      addPages = [createEmptyAddPage()];
+      addCurrentPageIndex = 0;
+      loadAddPage(0);
+      addDuplicateSetCache = new Set();
+      prevPageBtn.disabled = true;
+      prevPageBtn.classList.add("tool-disabled");
+      nextPageBtn.disabled = true;
+      nextPageBtn.classList.add("tool-disabled");
+      confirmAddBtn.disabled = true;
+      confirmAddBtn.classList.add("tool-disabled");
+    }
+
+    function openAddModal() {
+      ensureAddWordFields();
+      addModal.classList.remove("hidden");
+      addListName.value = getNextCustomListName();
+      setAddNameError("");
+      addPages = [createEmptyAddPage()];
+      addCurrentPageIndex = 0;
+      loadAddPage(0);
+      addDuplicateSetCache = new Set();
+      updateAddButtonsState(false);
+    }
+
+    function isInvalidWord(word) {
+      const value = String(word);
+      if (!value) return false;
+      // Only English letters are valid; spaces and any other characters are invalid.
+      return !/^[A-Za-z]+$/.test(value);
+    }
+
+    function updateAddButtonsState(checkRepeatNow = false) {
+      const allValues = addPages.flatMap((page) => page.map((entry) => entry.value.trim()));
+      const nonEmpty = allValues.filter(Boolean);
+      if (checkRepeatNow) {
+        addDuplicateSetCache = getDuplicateSet(nonEmpty);
+      }
+      const duplicateSet = addDuplicateSetCache;
+      const hasTouchedInvalidAcrossPages = addPages.some((page) =>
+        page.some((entry) => entry.touched && isInvalidWord(entry.value))
+      );
+
+      addWordFields.forEach(({ input, repeatedTag, invalidTag }, idx) => {
+        const pageEntry = addPages[addCurrentPageIndex]?.[idx] || { value: "", touched: false };
+        const key = pageEntry.value.trim().toLowerCase();
+        const isFocused = document.activeElement === input;
+        const isTouched = !!pageEntry.touched;
+        const isRepeated = !isFocused && isTouched && key && duplicateSet.has(key);
+        const shouldShowInvalid = isTouched && !isRepeated && isInvalidWord(pageEntry.value);
+        input.classList.toggle("is-repeated", !!isRepeated);
+        input.classList.toggle("is-invalid", !!shouldShowInvalid);
+        repeatedTag.classList.toggle("hidden", !isRepeated);
+        invalidTag.classList.toggle("hidden", !shouldShowInvalid);
+      });
+
+      const currentValues = (addPages[addCurrentPageIndex] || []).map((entry) => entry.value.trim());
+      const currentPageFullyValid = currentValues.length === WORDS_PER_PAGE &&
+        currentValues.every((value) => value.length > 0 && !isInvalidWord(value));
+      const hasNextExisting = addCurrentPageIndex < addPages.length - 1;
+      const canCreateNextPage = !hasNextExisting && currentPageFullyValid && duplicateSet.size === 0;
+      const canGoNext = hasNextExisting || canCreateNextPage;
+      const canGoPrev = addCurrentPageIndex > 0;
+
+      prevPageBtn.disabled = !canGoPrev;
+      prevPageBtn.classList.toggle("tool-disabled", !canGoPrev);
+      nextPageBtn.disabled = !canGoNext;
+      nextPageBtn.classList.toggle("tool-disabled", !canGoNext);
+
+      const name = addListName.value.trim();
+      if (!name) {
+        setAddNameError("Please enter a list name.");
+      } else if (isDuplicateName(name)) {
+        setAddNameError("This name already exists. Please choose another name.");
+      } else {
+        setAddNameError("");
+      }
+
+      const canAdd = nonEmpty.length > 0 && duplicateSet.size === 0 && !hasTouchedInvalidAcrossPages && name && !isDuplicateName(name);
+      confirmAddBtn.disabled = !canAdd;
+      confirmAddBtn.classList.toggle("tool-disabled", !canAdd);
+    }
+
+    function updateImportButtonState() {
+      const name = importListName.value.trim();
+      if (!pendingImportWords.length) {
+        confirmImportBtn.disabled = true;
+        confirmImportBtn.classList.add("tool-disabled");
+        return;
+      }
+      if (!name) {
+        setNameError("Please enter a list name.");
+        confirmImportBtn.disabled = true;
+        confirmImportBtn.classList.add("tool-disabled");
+        return;
+      }
+      if (isDuplicateName(name)) {
+        setNameError("This name already exists. Please choose another name.");
+        confirmImportBtn.disabled = true;
+        confirmImportBtn.classList.add("tool-disabled");
+        return;
+      }
+      if (pendingImportHasDuplicates) {
+        setImportError("Repeated words are not allowed.");
+        confirmImportBtn.disabled = true;
+        confirmImportBtn.classList.add("tool-disabled");
+        return;
+      }
+      setNameError("");
+      setImportError("");
+      confirmImportBtn.disabled = false;
+      confirmImportBtn.classList.remove("tool-disabled");
+    }
+
+    function handleImportFile(fileList) {
+      setImportError("");
+      setNameError("");
+      if (!fileList || fileList.length !== 1) {
+        pendingImportHasDuplicates = false;
+        setImportError("Please select exactly one .txt file.");
+        return;
+      }
+
+      const file = fileList[0];
+      const isTxtByName = /\.txt$/i.test(file.name);
+      if (!isTxtByName) {
+        pendingImportHasDuplicates = false;
+        setImportError("Only .txt files are supported.");
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        const text = typeof reader.result === "string" ? reader.result : "";
+        const words = sanitizeWordsFromText(text);
+        if (!words.length) {
+          pendingImportHasDuplicates = false;
+          setImportError("This file has no valid words. Add one word per line.");
+          return;
+        }
+
+        pendingImportWords = words;
+        const duplicateSet = getDuplicateSet(words);
+        pendingImportHasDuplicates = duplicateSet.size > 0;
+        importPreviewList.innerHTML = "";
+        words.forEach((word) => {
+          const li = document.createElement("li");
+          const normalized = word.trim().toLowerCase();
+          const isRepeated = duplicateSet.has(normalized);
+          if (isRepeated) li.classList.add("is-repeated");
+          li.textContent = word;
+          if (isRepeated) {
+            const tag = document.createElement("span");
+            tag.className = "repeated-tag";
+            tag.textContent = "repeated!";
+            li.appendChild(tag);
+          }
+          importPreviewList.appendChild(li);
+        });
+        if (pendingImportHasDuplicates) {
+          setImportError("Repeated words are not allowed.");
+        }
+        dropZone.classList.add("hidden");
+        importDetails.classList.remove("hidden");
+        updateImportButtonState();
+      };
+      reader.onerror = () => {
+        setImportError("Could not read this file.");
+      };
+      reader.readAsText(file);
+    }
+  
+    function setSelected(id) {
+      selectedId = id;
+      renderLibraryList();
+      const selectedItem = libraries.find((lib) => lib.id === id);
+  
+      if (!selectedItem) {
+        // No selection
+        listTitle.textContent = "Word List";
+        wordPreview.innerHTML = "";
+        emptyState.classList.remove("hidden");
+        detailState.classList.add("hidden");
+        disableExport();
+        return;
+      }
+
+      // Update title + count
+      listTitle.textContent = selectedItem.title;
+      wordCount.textContent = selectedItem.words.length;
+
+      wordPreview.innerHTML = "";
+      selectedItem.words.forEach((word) => {
+        const item = document.createElement("li");
+        item.textContent = word;
+        wordPreview.appendChild(item);
+      });
+  
+      // Show detail
+      emptyState.classList.add("hidden");
+      detailState.classList.remove("hidden");
+  
+      enableExport();
+    }
+  
+    if (isPrintMode) {
+      playWithListBtn.textContent = "print with this list";
+    } else {
+      playWithListBtn.textContent = "play with this list";
+    }
+
+    // Default: nothing selected
+    setSelected(null);
+    renderLibraryList();
+  
+    // Search filter
+    const search = document.querySelector(".library-search");
+    search.addEventListener("input", renderLibraryList);
+    libraryFilter.addEventListener("change", renderLibraryList);
+  
+    // Main actions
+    addBtn.addEventListener("click", openAddModal);
+    importBtn.addEventListener("click", openImportModal);
+    cancelImportBtn.addEventListener("click", closeImportModal);
+    closeAddBtn.addEventListener("click", closeAddModal);
+    closeFullListBtn.addEventListener("click", closeFullListModal);
+    fullListModal.addEventListener("click", (event) => {
+      if (event.target === fullListModal) {
+        closeFullListModal();
+      }
+    });
+    chooseFileBtn.addEventListener("click", (event) => {
+      event.stopPropagation();
+      importFileInput.click();
+    });
+    importFileInput.addEventListener("change", () => handleImportFile(importFileInput.files));
+    importListName.addEventListener("input", updateImportButtonState);
+    addListName.addEventListener("input", () => updateAddButtonsState(false));
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && !importModal.classList.contains("hidden")) {
+        closeImportModal();
+      }
+      if (event.key === "Escape" && !addModal.classList.contains("hidden")) {
+        closeAddModal();
+      }
+      if (event.key === "Escape" && !fullListModal.classList.contains("hidden")) {
+        closeFullListModal();
+      }
+    });
+
+    ["dragenter", "dragover"].forEach((evt) => {
+      dropZone.addEventListener(evt, (event) => {
+        event.preventDefault();
+        dropZone.classList.add("is-drag-over");
+      });
+    });
+    ["dragleave", "drop"].forEach((evt) => {
+      dropZone.addEventListener(evt, (event) => {
+        event.preventDefault();
+        dropZone.classList.remove("is-drag-over");
+      });
+    });
+    dropZone.addEventListener("drop", (event) => {
+      handleImportFile(event.dataTransfer.files);
+    });
+    dropZone.addEventListener("click", () => importFileInput.click());
+    dropZone.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        importFileInput.click();
+      }
+    });
+
+    confirmImportBtn.addEventListener("click", () => {
+      const name = importListName.value.trim();
+      updateImportButtonState();
+      if (confirmImportBtn.disabled) return;
+      const id = `custom-${Date.now()}`;
+      libraries.push({
+        id,
+        title: name,
+        words: [...pendingImportWords],
+        favorite: false,
+        category: "custom",
+        difficulty: "custom",
+        locked: false
+      });
+      writeStoredCustomLists();
+      closeImportModal();
+      renderLibraryList();
+      setSelected(id);
+    });
+
+    prevPageBtn.addEventListener("click", () => {
+      if (prevPageBtn.disabled) return;
+      loadAddPage(addCurrentPageIndex - 1);
+      updateAddButtonsState(false);
+    });
+
+    nextPageBtn.addEventListener("click", () => {
+      updateAddButtonsState(true);
+      if (nextPageBtn.disabled) return;
+      if (addCurrentPageIndex === addPages.length - 1) {
+        addPages.push(createEmptyAddPage());
+      }
+      loadAddPage(addCurrentPageIndex + 1);
+      updateAddButtonsState(false);
+    });
+
+    confirmAddBtn.addEventListener("click", () => {
+      updateAddButtonsState(true);
+      if (confirmAddBtn.disabled) return;
+      const name = addListName.value.trim();
+      const words = addPages
+        .flatMap((page) => page.map((entry) => entry.value.trim()))
+        .filter(Boolean);
+      const id = `custom-${Date.now()}`;
+      libraries.push({
+        id,
+        title: name,
+        words,
+        favorite: false,
+        category: "custom",
+        difficulty: "custom",
+        locked: false
+      });
+      writeStoredCustomLists();
+      closeAddModal();
+      renderLibraryList();
+      setSelected(id);
+    });
+
+    playWithListBtn.addEventListener("click", () => {
+      const selectedItem = libraries.find((lib) => lib.id === selectedId);
+      if (!selectedItem) return;
+      localStorage.setItem("spellingcentral_selected_list", JSON.stringify(selectedItem));
+      const nextMode = isPrintMode ? "print" : "custom";
+      window.location.href = `game-selection.html?mode=${nextMode}`;
+    });
+
+    exportBtn.addEventListener("click", () => {
+      const selectedItem = libraries.find((lib) => lib.id === selectedId);
+      if (!selectedItem) return;
+
+      const content = `${selectedItem.words.join("\n")}\n`;
+      const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const safeName = selectedItem.title.replace(/[\\/:*?"<>|]+/g, "").trim();
+      const downloadLink = document.createElement("a");
+      downloadLink.href = url;
+      downloadLink.download = `spellingcentral - ${safeName || "word list"}.txt`;
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      downloadLink.remove();
+      URL.revokeObjectURL(url);
+    });
+  </script>
+</body>
+</html>

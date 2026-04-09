@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Word Search</title>
+  <link rel="stylesheet" href="word-search.css">
+</head>
+<body class="word-search-page">
+  <a href="../homepage/game-selection.html" class="page-home-btn">← GAME SELECTION</a>
+  <button id="helpBtn" class="word-search-help-btn" type="button" aria-label="Open help">?</button>
+
+  <div class="container word-search-container">
+    <header class="word-search-header">
+      <div class="word-search-heading">
+        <h1 class="title">Word Search</h1>
+        <p class="subtitle">Find the hidden words from your selected list.</p>
+      </div>
+
+      <div class="word-search-top-actions">
+        <div id="headerStatusCard" class="word-search-status-card" aria-live="polite">
+          <span class="status-card-label">Status</span>
+          <span id="statusMessage" class="status-card-text">Puzzle ready.</span>
+        </div>
+
+        <div class="word-search-timer-card" aria-live="polite">
+          <span class="timer-label">Time</span>
+          <span id="timerValue" class="timer-value">00:00</span>
+        </div>
+
+        <button id="restartBtn" class="tool-btn word-search-control" type="button">Restart</button>
+      </div>
+    </header>
+
+    <div class="word-search-layout">
+      <main class="word-search-board-panel" aria-label="Word search puzzle area">
+        <div class="word-search-instructions panel-muted" aria-label="Controls">
+          <span>Click and drag to select letters.</span>
+          <span class="word-search-key-hint">
+            <span class="word-search-keycap">Enter</span> Try Word
+          </span>
+          <span class="word-search-key-hint">
+            <span class="word-search-keycap">Esc</span> Clear
+          </span>
+        </div>
+
+        <div class="word-search-board-shell">
+          <div id="wordSearchBoard" class="word-search-board" role="grid" aria-label="Word search grid"></div>
+        </div>
+      </main>
+
+      <aside class="word-search-sidebar" aria-live="polite">
+        <section class="word-search-panel">
+          <div class="word-search-panel-head">
+            <h2 class="word-search-panel-title">Selected Letters</h2>
+            <span id="selectionHint" class="word-search-panel-note">Start selecting</span>
+          </div>
+
+          <div id="selectedWordDisplay" class="selected-word-display">|</div>
+          <div id="selectedWordState" class="selected-word-state panel-muted">
+            Select letters to build a word.
+          </div>
+
+          <div class="word-search-stack">
+            <button id="tryWordBtn" class="tool-btn word-search-action tool-disabled" type="button" disabled>
+              Try Word
+            </button>
+            <button id="clearSelectionBtn" class="tool-btn word-search-action tool-disabled" type="button" disabled>
+              Clear Selection
+            </button>
+          </div>
+        </section>
+
+        <section class="word-search-panel word-search-wordlist-panel">
+          <div class="word-search-panel-head">
+            <h2 class="word-search-panel-title">Word List</h2>
+            <span id="progressText" class="word-search-progress">0 / 0</span>
+          </div>
+
+          <div class="word-search-progress-bar" aria-hidden="true">
+            <div id="progressFill" class="word-search-progress-fill"></div>
+          </div>
+
+          <ul id="wordList" class="word-search-wordlist"></ul>
+        </section>
+
+        <div class="word-search-bottom-actions">
+          <button id="finishBtn" class="tool-btn word-search-finish" type="button">Finish Game</button>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <div id="gameCompleteModal" class="word-search-modal hidden" role="dialog" aria-modal="true" aria-labelledby="gameCompleteTitle">
+    <div class="word-search-modal-panel word-search-results-panel">
+      <h2 id="gameCompleteTitle" class="word-search-results-title">Puzzle Complete</h2>
+      <p id="gameCompleteMessage" class="word-search-results-subtitle">Nice work.</p>
+
+      <div class="word-search-results-stats">
+        <div class="word-search-results-stat">
+          <div id="gameCompleteFoundValue" class="word-search-results-stat-value">0</div>
+          <div class="word-search-results-stat-label">Found</div>
+        </div>
+
+        <div class="word-search-results-stat">
+          <div id="gameCompleteTimeValue" class="word-search-results-stat-value">00:00</div>
+          <div class="word-search-results-stat-label">Time</div>
+        </div>
+      </div>
+
+      <div class="word-search-results-actions">
+        <button id="playAgainBtn" class="tool-btn" type="button">Play Again</button>
+        <a href="../homepage/game-selection.html" class="page-home-btn word-search-results-back-btn">← GAME SELECTION</a>
+      </div>
+    </div>
+  </div>
+
+  <div id="helpModal" class="word-search-help-modal hidden" role="dialog" aria-modal="true" aria-labelledby="helpModalTitle">
+    <div class="word-search-help-panel word-search-tutorial-panel" role="document">
+      <button id="helpCloseBtn" class="word-search-help-close" type="button" aria-label="Close help">X</button>
+
+      <div class="ws-tut-header">
+        <div class="ws-tut-header-main">
+          <span class="ws-tut-header-icon">🔍</span>
+          <div class="ws-tut-header-copy">
+            <h2 id="helpModalTitle" class="ws-tut-title">Word Search Tutorial</h2>
+            <p class="ws-tut-subtitle">A quick walkthrough of how this game works.</p>
+          </div>
+        </div>
+
+        <div class="ws-tut-progress-wrap">
+          <span id="wsTutStepLabel" class="ws-tut-step-label">Step 1 of 4</span>
+          <div class="ws-tut-progress-bar" aria-hidden="true">
+            <div id="wsTutProgressFill" class="ws-tut-progress-fill"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ws-tut-body">
+        <div class="ws-tut-explain">
+          <div class="ws-tut-step-num-wrap">
+            <span id="wsTutStepNum" class="ws-tut-step-num">1</span>
+            <span id="wsTutStepOf" class="ws-tut-step-of">of 4</span>
+          </div>
+          <h3 id="wsTutStepTitle" class="ws-tut-step-title"></h3>
+          <p id="wsTutStepBody" class="ws-tut-step-body"></p>
+        </div>
+
+        <div id="wsTutDemo" class="ws-tut-demo"></div>
+      </div>
+
+      <div class="ws-tut-footer">
+        <button id="wsTutPrevBtn" class="tool-btn" type="button" disabled>← Previous</button>
+        <div id="wsTutDots" class="ws-tut-dots"></div>
+        <button id="wsTutNextBtn" class="tool-btn" type="button">Next →</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="cursor" class="fake-cursor">
+    <svg width="22" height="26" viewBox="0 0 22 26" fill="none">
+      <path d="M1 1L1 20L5.5 15.5L8.5 22L11 21L8 14.5L14.5 14.5L1 1Z" fill="white" stroke="#1f3b2d" stroke-width="1.5"/>
+    </svg>
+  </div>
+
+  <script src="/homepage/word-lists.js"></script>
+  <script src="word-search.js"></script>
+</body>
+</html>
